@@ -63,7 +63,7 @@ Photo attachments, camera plate matching, connected scale, bilingual text, offli
 ## Waiting on people
 
 1. `aws login` on the build machine, then `scripts\deploy.ps1`.
-2. A public GitHub repository URL to push to.
+2. ~~A public GitHub repository URL to push to.~~ Done: pushed to https://github.com/alabhya-git/aws_env.
 3. Narrated demo recording, YouTube upload and form submission.
 4. The team's list of any other AI tools used, for `SUBMISSION.md`.
 5. A real pilot, if and when a kitchen agrees.

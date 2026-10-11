@@ -6,7 +6,7 @@
 | | |
 |---|---|
 | Live app | see `DEPLOYMENT.md` |
-| Repository | *(add the public repo URL)* |
+| Repository | https://github.com/alabhya-git/aws_env |
 | Demo video | *(add the YouTube URL)* |
 | Team | *(add names)* |
 
