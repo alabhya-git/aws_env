@@ -23,6 +23,9 @@ export function Landing({ cfg }: { cfg: RuntimeConfig }) {
               For the person at the serving counter and the kitchen manager behind them. ProofPlate learns how much of a dish each
               diner chooses to eat, suggests the first portion, and turns what comes back on the plates into the next meal's plan.
             </p>
+            <p style={{ marginTop: 14, maxWidth: "34em" }}>
+              Food that is never wasted is food that never needs to be collected, sorted or processed, so this works at the start of the waste chain rather than the end.
+            </p>
             <div className="row cta">
               <Link to="/demo/serve" className="btn big primary">Serve a plate in the demo</Link>
               <Link to="/signin" className="btn big">Pilot workspace</Link>
