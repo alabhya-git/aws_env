@@ -42,7 +42,7 @@ export function Kitchen() {
 
   const args = useDebounced(form, 350);
   const q = useAsync(
-    () => (args && sessionId && foodId && calibration ? api<any>("kitchen_plan", { session_id: sessionId, food_id: foodId, policy, ...args }) : Promise.resolve(null)),
+    () => (args && sessionId && foodId && calibration ? api("kitchen_plan", { session_id: sessionId, food_id: foodId, policy, ...args }) : Promise.resolve(null)),
     [JSON.stringify(args), sessionId, foodId, policy, calibration?.id],
   );
   if (!ws.boot.foods.length || !calibration || !session) return <NeedsSetup />;

@@ -104,6 +104,16 @@ python -m evaluation.run_frontier
 
 Outputs: `evaluation/outputs/evaluation.json` and `EVALUATION.md`. The Evidence page reads the same JSON.
 
+## Keeping the web client and API in step
+
+Request types in the web app are generated from the API's OpenAPI schema, so a renamed field fails the type-check.
+
+```powershell
+$env:PYTHONPATH = "servicespi"; $env:PROOFPLATE_STORE = "memory"
+python -c "import json; from proofplate.main import app; open('apps/web/openapi.json', 'w').write(json.dumps(app.openapi()))"
+cd apps\web; npm run gen:api
+```
+
 ## Deploy to AWS
 
 Needs AWS CLI v2 with an active session (`aws login`). No Docker.

@@ -241,18 +241,18 @@ export function Evidence() {
   const ws = useWs();
   const { api, mode, foodId } = ws;
   const [tab, setTab] = useState<Tab>(mode === "demo" ? "simulated" : "observed");
-  const q = useAsync(() => api<any>("evidence", foodId ? { food_id: foodId } : {}), [foodId]);
+  const q = useAsync(() => api("evidence", foodId ? { food_id: foodId } : {}), [foodId]);
   const toast = useToast();
   const [busy, setBusy] = useState(false);
 
-  const exportFile = async (what: string, format: string) => {
+  const exportFile = async (what: "events" | "participations", format: "json" | "csv") => {
     setBusy(true);
     try {
       let cursor: number | null = 0;
       let parts: string[] = [];
       let name = "";
       while (cursor !== null) {
-        const out: any = await api<any>("export", { what, format, cursor });
+        const out: any = await api("export", { what, format, cursor });
         name = out.filename;
         parts.push(format === "csv" && parts.length ? out.content.split("\n").slice(1).join("\n") : out.content);
         cursor = out.next_cursor;

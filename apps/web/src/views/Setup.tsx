@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
-import { download } from "../api";
+import { download, OpArgs, OpName } from "../api";
 import { useWs } from "../App";
 import { kg, scoopsText } from "../text";
 import { ErrorNote, Field, useToast } from "../ui";
@@ -12,7 +12,7 @@ function useAction() {
   const toast = useToast();
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
-  const run = async (op: string, args: Record<string, unknown>, done: string): Promise<any | null> => {
+  const run = async <O extends OpName>(op: O, args: OpArgs[O], done: string): Promise<any | null> => {
     setBusy(true);
     setError(null);
     try {
@@ -127,9 +127,9 @@ function Sessions() {
     if (out) ws.setSessionId(out.id);
   };
   const close = async (id: string) => {
-    const patch: Record<string, unknown> = { session_id: id, status: "closed" };
+    const patch: OpArgs["update_session"] = { session_id: id, status: "closed" };
     if (prepared) patch.prepared_g = Math.round(Number(prepared) * 1000);
-    if (surplus) { patch.kitchen_surplus_g = Math.round(Number(surplus) * 1000); patch.surplus_destination = dest; }
+    if (surplus) { patch.kitchen_surplus_g = Math.round(Number(surplus) * 1000); patch.surplus_destination = dest as OpArgs["update_session"]["surplus_destination"]; }
     if (await a.run("update_session", patch, "Service closed. Plates without a return now count as missing.")) { setClosing(null); setPrepared(""); setSurplus(""); }
   };
   return (
@@ -256,7 +256,7 @@ function ImportData() {
   const a = useAction();
   const [csv, setCsv] = useState("");
   const [preview, setPreview] = useState<any | null>(null);
-  const [m, setM] = useState({ source_name: "", license: "", collection_method: "", measurement_status: "measured", what_it_measures: "" });
+  const [m, setM] = useState({ source_name: "", license: "", collection_method: "", measurement_status: "measured" as "measured" | "synthetic", what_it_measures: "" });
   const manifest = { ...m, food_id: ws.foodId || ws.boot.foods[0]?.id };
   const ready = csv.trim() && m.source_name.length > 1 && m.license.length > 1 && m.collection_method.length > 1 && m.what_it_measures.length > 1 && manifest.food_id;
   const onFile = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -271,7 +271,7 @@ function ImportData() {
     const out = await a.run("import_commit", { csv_text: csv, manifest }, "Import finished");
     if (out) { setPreview(null); setCsv(""); a.toast.show(`Imported ${out.events_created} events (${out.duplicates_skipped} already present)`); }
   };
-  const set = (k: string) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => { setM({ ...m, [k]: e.target.value }); setPreview(null); };
+  const set = (k: keyof typeof m) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => { setM({ ...m, [k]: e.target.value } as typeof m); setPreview(null); };
   return (
     <section className="card stack l">
       <div className="row between">
@@ -320,6 +320,36 @@ function ImportData() {
   );
 }
 
+function ServingStyle() {
+  const ws = useWs();
+  const a = useAction();
+  const st = ws.boot.settings;
+  const options: Array<[number, string, string]> = [
+    [8, "Lean", "smaller first portions, more trips for seconds"],
+    [20, "Balanced", "the default"],
+    [40, "Generous", "larger first portions, fewer trips for seconds"],
+  ];
+  return (
+    <div className="stack">
+      <h3>How much weight to give a trip back for seconds</h3>
+      <div className="chips">
+        {options.map(([v, label, hint]) => (
+          <button key={v} type="button" aria-pressed={st.refill_friction_g === v} disabled={a.busy} title={hint}
+            onClick={() => a.run("update_settings", { refill_friction_g: v }, `Serving style set to ${label.toLowerCase()}`)}>
+            {label} · {v} g
+          </button>
+        ))}
+      </div>
+      <p className="small muted">
+        The suggestion balances food left on the plate against trips back for seconds. This sets the cost given to one trip, in grams of leftover.
+        The Evidence page shows, in simulation, where each setting lands on waste and on diners left wanting more.
+      </p>
+      <ErrorNote error={a.error} />
+      {a.toast.node}
+    </div>
+  );
+}
+
 export function Setup() {
   const ws = useWs();
   const st = ws.boot.settings;
@@ -337,6 +367,7 @@ export function Setup() {
       <section className="card stack">
         <h2>Assumptions in force</h2>
         <p className="muted">Product defaults, not health standards. They are recorded with every suggestion.</p>
+        <ServingStyle />
         <div className="scroll-x">
           <table className="t"><tbody>
             <tr><td>Portions offered</td><td>{scoopsText(st.min_scoops)} to {scoopsText(st.max_scoops)}, in steps of {scoopsText(st.step_scoops)}</td></tr>

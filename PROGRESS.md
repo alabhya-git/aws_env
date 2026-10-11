@@ -24,10 +24,11 @@ Updated 11 October 2026, evening IST. Three statuses are kept apart on purpose.
 
 | Check | Command | Result |
 |---|---|---|
-| Unit, API and storage tests | `python -m pytest tests` | 78 passed |
-| Web type-check and production build | `npm run build` in `apps/web` | passed |
+| Unit, API and storage tests | `python -m pytest tests` | 79 passed |
+| Web type-check (request types generated from the API's OpenAPI schema) and production build | `npm run build` in `apps/web` | passed |
 | Demo browser walkthrough, desktop 1366 px and phone 390 px | `python tests/e2e/walkthrough.py http://127.0.0.1:8000` | passed; screenshots in `docs/screenshots/` |
 | Pilot browser flow (local dev sign-in, SQLite) | `python tests/e2e/pilot_flow.py http://127.0.0.1:8000 --user manager` | passed |
+| Silent guide video of the demo walkthrough (local server) | `python tests/e2e/walkthrough.py http://127.0.0.1:8000 --video` | recorded to `build/video/`; to be re-recorded against the live URL |
 | Lambda package build | `python scripts/build_lambda.py` | 59 MB unzipped, Linux NumPy binaries present |
 | Simulated evaluation | `python -m evaluation.run_evaluation`, `python -m evaluation.run_frontier` | completed; see `EVALUATION.md` |
 
@@ -40,6 +41,7 @@ Not verified: anything on AWS, including the DynamoDB adapter against a real tab
 - A food without a calibration that happened to be first in the list locked the Serve page with no way to pick another food.
 - A food not on the selected service's menu could be selected, giving an error on lookup.
 - Overlapping labels on the "same empty plate" chart.
+- Six request-shape mismatches surfaced when the web client was typed against the generated API schema.
 
 ## Decisions
 

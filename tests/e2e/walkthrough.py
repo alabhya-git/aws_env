@@ -35,8 +35,9 @@ def shot(page: Page, name: str, full: bool = True) -> None:
 
 
 def beat(page: Page, ms: int | None = None) -> None:
+    """Hold on screen when recording, long enough to narrate over (about 2.5 minutes in total)."""
     if PAUSE:
-        page.wait_for_timeout(ms or PAUSE)
+        page.wait_for_timeout(int((ms or PAUSE) * 2.7))
 
 
 def desktop(page: Page) -> None:

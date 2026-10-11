@@ -1,9 +1,12 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { ApiError, newEventId } from "../api";
+import { ApiError, newEventId, OpArgs } from "../api";
 import { Link, useWs } from "../App";
 import { Plate } from "../Plate";
 import { BASIS, CLASS_LABEL, grams, istTime, LEFTOVER_REASONS, REASONS, SATISFACTION, scoopsText, SECONDS_STATUS } from "../text";
 import { ErrorNote, Field, Loading, Stepper, useToast } from "../ui";
+
+type EventArgs = OpArgs["record_event"];
+type EventFields = Omit<EventArgs, "event_id" | "session_id" | "diner_token" | "food_id">;
 
 export function SessionPicker() {
   const ws = useWs();
@@ -60,16 +63,16 @@ export function NeedsSetup() {
   );
 }
 
-function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { plate: any; scoopG: number; busy: boolean; correcting: boolean; onCancel?: () => void; onSubmit: (fields: Record<string, unknown>) => void }) {
+function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { plate: any; scoopG: number; busy: boolean; correcting: boolean; onCancel?: () => void; onSubmit: (fields: EventFields) => void }) {
   const [returned, setReturned] = useState(correcting && plate.returned_g != null ? String(plate.returned_g) : "");
-  const [measurement, setMeasurement] = useState("weighed");
-  const [satisfaction, setSatisfaction] = useState<string | null>(correcting ? plate.satisfaction : null);
-  const [reason, setReason] = useState<string>(correcting ? plate.leftover_reason || "none" : "none");
-  const [seconds, setSeconds] = useState<string>(plate.seconds_g?.length ? "served" : "not_requested");
+  const [measurement, setMeasurement] = useState<NonNullable<EventArgs["measurement"]>>("weighed");
+  const [satisfaction, setSatisfaction] = useState<EventArgs["satisfaction"]>(correcting ? plate.satisfaction : null);
+  const [reason, setReason] = useState<NonNullable<EventArgs["leftover_reason"]>>(correcting ? plate.leftover_reason || "none" : "none");
+  const [seconds, setSeconds] = useState<NonNullable<EventArgs["seconds_status"]>>(plate.seconds_g?.length ? "served" : "not_requested");
   const [losses, setLosses] = useState("");
   const [shared, setShared] = useState(false);
   const g = returned === "" ? null : Number(returned);
-  const valid = g !== null && Number.isInteger(g) && g >= 0 && satisfaction !== null;
+  const valid = g !== null && Number.isInteger(g) && g >= 0 && satisfaction != null;
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!valid) return;
@@ -115,7 +118,7 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
           <span>Why was food left?</span>
           <div className="chips">
             {LEFTOVER_REASONS.map(([k, label]) => (
-              <button type="button" key={k} aria-pressed={reason === k} onClick={() => setReason(k)}>{label}</button>
+              <button type="button" key={k} aria-pressed={reason === k} onClick={() => setReason(k as typeof reason)}>{label}</button>
             ))}
           </div>
         </div>
@@ -124,7 +127,7 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
         <summary className="small" style={{ cursor: "pointer" }}>Seconds, spills and sharing</summary>
         <div className="row top" style={{ marginTop: 10 }}>
           <Field label="Seconds">
-            <select className="input" value={seconds} onChange={(e) => setSeconds(e.target.value)}>
+            <select className="input" value={seconds} onChange={(e) => setSeconds(e.target.value as typeof seconds)}>
               {SECONDS_STATUS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
             </select>
           </Field>
@@ -156,7 +159,7 @@ export function Serve() {
   const [chosen, setChosen] = useState<number | null>(null);
   const [learning, setLearning] = useState<any | null>(null);
   const [notFound, setNotFound] = useState<string | null>(null);
-  const [pending, setPending] = useState<Record<string, unknown> | null>(null);
+  const [pending, setPending] = useState<EventArgs | null>(null);
   const [log, setLog] = useState<any | null>(null);
   const [correcting, setCorrecting] = useState(false);
   const [consent, setConsent] = useState(false);
@@ -191,12 +194,12 @@ export function Serve() {
   useEffect(() => { loadLog(); }, [loadLog]);
   useEffect(() => { if (ws.token) load(ws.token); /* reload when service or food changes */ }, [sessionId, foodId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const send = async (ev: Record<string, unknown>) => {
+  const send = async (ev: EventArgs) => {
     setBusy(true);
     setError(null);
     setPending(ev);
     try {
-      const out = await api<any>("record_event", ev);
+      const out = await api("record_event", ev);
       setPending(null);
       toast.show(out.duplicate ? "Already saved earlier. Nothing was added twice." : mode === "demo" ? "Saved in this browser's demo sandbox" : "Saved to the pilot record");
       if (out.learning) setLearning(out.learning);
@@ -210,8 +213,8 @@ export function Serve() {
       setBusy(false);
     }
   };
-  const event = (fields: Record<string, unknown>) =>
-    send({ event_id: newEventId(), session_id: sessionId, diner_token: ws.token, food_id: foodId, ...fields });
+  const event = (fields: EventFields) =>
+    send({ event_id: newEventId(), session_id: sessionId!, diner_token: ws.token, food_id: foodId!, ...fields });
 
   const register = async () => {
     if (!notFound) return;

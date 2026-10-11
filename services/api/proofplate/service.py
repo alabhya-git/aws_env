@@ -220,6 +220,16 @@ def bootstrap(ctx: Ctx, _: S.Empty) -> dict:
     }
 
 
+def update_settings(ctx: Ctx, a: S.SettingsPatch) -> dict:
+    ctx.need_manager()
+    cur = ctx.repo.get(ctx.site_id, "site", "settings") or {}
+    patch = {k: v for k, v in a.model_dump().items() if v is not None}
+    doc = {**{k: v for k, v in cur.items() if k not in ("id", "version")}, **patch,
+           "updated_at": S.utcnow().isoformat(), "updated_by": ctx.operator}
+    ctx.repo.put(ctx.site_id, "site", "settings", doc)
+    return settings(ctx)
+
+
 def create_food(ctx: Ctx, a: S.FoodIn) -> dict:
     ctx.need_manager()
     fid = f"{''.join(ch if ch.isalnum() else '-' for ch in a.name.lower()).strip('-')[:40]}-{a.recipe_version}"
@@ -669,6 +679,7 @@ def evidence(ctx: Ctx, a: S.EvidenceArgs) -> dict:
 
 OPS = {
     "bootstrap": (S.Empty, bootstrap, False),
+    "update_settings": (S.SettingsPatch, update_settings, True),
     "create_food": (S.FoodIn, create_food, True),
     "create_calibration": (S.CalibrationIn, create_calibration, True),
     "create_session": (S.SessionIn, create_session, True),

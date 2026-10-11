@@ -1,9 +1,16 @@
 // One client for both workspaces. The demo keeps its own journal in this
 // browser and sends it with every request; the server stores nothing for it.
 // The pilot workspace is persisted on the server and needs a signed-in operator.
+import type { components } from "./api-schema";
 import { currentToken, devUser, signOut } from "./auth";
 
 export type Mode = "demo" | "pilot";
+
+// Request types are generated from the API's OpenAPI schema (npm run gen:api),
+// so a renamed or mistyped field fails the type-check instead of failing at the counter.
+type Schemas = components["schemas"];
+export type OpArgs = { [K in keyof Schemas as K extends `Pilot_${infer Op}` ? Op : never]: Schemas[K] extends { args: infer A } ? A : never };
+export type OpName = keyof OpArgs;
 
 export class ApiError extends Error {
   constructor(public code: string, message: string, public status: number, public offline = false) {
@@ -50,9 +57,9 @@ async function parse(res: Response): Promise<any> {
   }
 }
 
-export async function call<T = any>(mode: Mode, op: string, args: Record<string, unknown> = {}): Promise<T> {
+export async function call<O extends OpName>(mode: Mode, op: O, args: OpArgs[O]): Promise<any> {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  let body: Record<string, unknown> = { args };
+  let body: { args: unknown; sandbox?: unknown[] } = { args };
   if (mode === "demo") {
     body = { args, sandbox: readSandbox() };
   } else {
@@ -87,7 +94,7 @@ export async function call<T = any>(mode: Mode, op: string, args: Record<string,
       throw new ApiError("STORAGE", "This browser would not store the demo sandbox, so the action was not kept.", 0);
     }
   }
-  return data.result as T;
+  return data.result;
 }
 
 export async function getJson<T = any>(path: string): Promise<T> {

@@ -1,5 +1,5 @@
 import { createContext, MouseEvent, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ApiError, call, getJson, lastCall, Mode, resetDemo, sandboxSize } from "./api";
+import { ApiError, call, getJson, lastCall, Mode, OpArgs, OpName, resetDemo, sandboxSize } from "./api";
 import { getConfig, onAuthChange, RuntimeConfig, setConfig, signedInAs, signOut } from "./auth";
 import { Evidence } from "./views/Evidence";
 import { Kitchen } from "./views/Kitchen";
@@ -63,7 +63,7 @@ interface Workspace {
   mode: Mode;
   boot: Boot;
   reload: () => Promise<void>;
-  api: <T = any>(op: string, args?: Record<string, unknown>) => Promise<T>;
+  api: <O extends OpName>(op: O, args: OpArgs[O]) => Promise<any>;
   sessionId: string | null;
   setSessionId: (id: string) => void;
   foodId: string | null;
@@ -125,7 +125,7 @@ function WorkspaceShell({ mode, view, cfg }: { mode: Mode; view: string; cfg: Ru
 
   const reload = useCallback(async () => {
     try {
-      const b = await call<Boot>(mode, "bootstrap", {});
+      const b: Boot = await call(mode, "bootstrap", {});
       setBoot(b);
       setError(null);
       setSessionId((cur) => (cur && b.sessions.some((s) => s.id === cur) ? cur : (b.sessions.find((s) => s.status === "open") || b.sessions[0])?.id || null));
@@ -154,7 +154,7 @@ function WorkspaceShell({ mode, view, cfg }: { mode: Mode; view: string; cfg: Ru
     setFoodId(calibrated || menu[0] || null);
   }, [boot, sessionId, foodId]);
 
-  const api = useCallback(<T,>(op: string, args: Record<string, unknown> = {}) => call<T>(mode, op, args), [mode]);
+  const api = useCallback(<O extends OpName>(op: O, args: OpArgs[O]) => call(mode, op, args), [mode]);
   const ws = useMemo<Workspace | null>(() => {
     if (!boot) return null;
     const session = boot.sessions.find((s) => s.id === sessionId) || null;

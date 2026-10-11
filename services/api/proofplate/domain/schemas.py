@@ -183,5 +183,14 @@ class ImportArgs(Strict):
     manifest: ImportManifest
 
 
+class SettingsPatch(Strict):
+    """Site-level policy assumptions a kitchen manager may change."""
+
+    refill_friction_g: Optional[float] = Field(default=None, ge=0, le=80)
+    max_change_scoops: Optional[float] = Field(default=None, ge=0.5, le=4)
+    alpha: Optional[float] = Field(default=None, ge=0.01, le=0.25)
+    name: Optional[str] = Field(default=None, min_length=1, max_length=60)
+
+
 class Empty(Strict):
     pass

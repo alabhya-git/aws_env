@@ -76,7 +76,7 @@ These are properties of a simulator built on stated assumptions. They are not me
 
 ## Verification
 
-- 78 automated tests pass: numerics against SciPy, likelihoods against analytic values, censoring behaviour, policy and planner constraints, mass balance, idempotency, corrections, tenant isolation, demo/pilot isolation, and one storage contract run against in-memory, SQLite and DynamoDB (moto) adapters.
+- 79 automated tests pass: numerics against SciPy, likelihoods against analytic values, censoring behaviour, policy and planner constraints, mass balance, idempotency, corrections, tenant isolation, demo/pilot isolation, and one storage contract run against in-memory, SQLite and DynamoDB (moto) adapters.
 - A scripted Chrome walkthrough covers serve → seconds → return → changed suggestion → kitchen recompute → infeasible plan → evidence export, at desktop and phone widths.
 - Deployment checks are recorded in `DEPLOYMENT.md`.
 

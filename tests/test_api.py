@@ -165,6 +165,31 @@ def test_requested_portion_and_opt_out(setup):
     call("update_diner", {"token": s["token"], "personalization_opt_out": False})
 
 
+def test_serving_style_setting_changes_the_policy_and_needs_a_manager(setup):
+    s = setup
+    call("create_diner", {"token": "T-style"})
+    for g in (150, 190, 230):
+        ses = call("create_session", {"name": f"S{g}", "service_date": "2026-10-10", "food_ids": [s["food"]]})["id"]
+        base = {"session_id": ses, "diner_token": "T-style", "food_id": s["food"]}
+        call("record_event", {**base, "event_id": eid(), "type": "serve_initial", "grams": 300, "measurement": "weighed"})
+        call("record_event", {**base, "event_id": eid(), "type": "return", "grams": 300 - g, "measurement": "weighed",
+                              "satisfaction": "enough", "leftover_reason": "enough_food"})
+    assert call("update_settings", {"refill_friction_g": 40}, headers=OPER, expect=403)["code"] == "FORBIDDEN"
+    args = {"session_id": s["session"], "token": "T-style", "food_id": s["food"]}
+    lean = call("update_settings", {"refill_friction_g": 0})
+    assert lean["refill_friction_g"] == 0
+    small = call("diner_state", args)["recommendation"]
+    call("update_settings", {"refill_friction_g": 80})
+    big = call("diner_state", args)["recommendation"]
+    # the per-meal change limit can hold both at the same portion; the setting must still reach the policy
+    assert big["scoops"] >= small["scoops"]
+    assert small["constraints"]["refill_friction_g"] == 0 and big["constraints"]["refill_friction_g"] == 80
+    cost = lambda rec, scoops: next(r["cost"] for r in rec["tradeoff"] if r["scoops"] == scoops)
+    assert cost(big, 1.0) > cost(small, 1.0)        # a small portion is penalised more when trips cost more
+    assert call("update_settings", {"refill_friction_g": 20})["refill_friction_g"] == 20
+    assert client.post("/api/pilot/update_settings", json={"args": {"refill_friction_g": 500}}, headers=ALICE).status_code == 422
+
+
 def test_tenant_isolation(setup):
     s = setup
     b = call("bootstrap", {}, headers=BOB)

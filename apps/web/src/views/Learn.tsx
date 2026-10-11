@@ -15,7 +15,7 @@ function WhatIf({ token, foodId, scoopG }: { token: string; foodId: string; scoo
   const [repeats, setRepeats] = useState(3);
   const [pick, setPick] = useState<Branch>("unknown");
   const plateG = Math.round(scoops * scoopG);
-  const q = useAsync(() => api<any>("whatif", { token, food_id: foodId, plate_g: plateG, repeats }), [token, foodId, plateG, repeats]);
+  const q = useAsync(() => api("whatif", { token, food_id: foodId, plate_g: plateG, repeats }), [token, foodId, plateG, repeats]);
   const w = q.data;
   return (
     <section className="card stack l">
@@ -93,7 +93,7 @@ export function Learn() {
   const ws = useWs();
   const { api, foodId, boot, calibration, mode } = ws;
   const token = ws.token || boot.diners[0]?.token || "";
-  const q = useAsync(() => (token && foodId && calibration ? api<any>("learn", { token, food_id: foodId }) : Promise.resolve(null)), [token, foodId, calibration?.id]);
+  const q = useAsync(() => (token && foodId && calibration ? api("learn", { token, food_id: foodId }) : Promise.resolve(null)), [token, foodId, calibration?.id]);
   if (!boot.foods.length || !calibration) return <NeedsSetup />;
   if (!boot.diners.length) return <div className="card empty">No diner tokens are registered yet. Register one from Serve.</div>;
   const d = q.data;
