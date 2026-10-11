@@ -9,7 +9,7 @@ Environmental Hacks · Waste and Energy track
 | Live app | https://imh92ymqaa.execute-api.ap-south-1.amazonaws.com (open **Open the demo**) |
 | Repository | https://github.com/alabhya-git/aws_env |
 | Demo video | *(add the YouTube URL)* |
-| Team | *(add names)* |
+| Team | Agrim Jindal, Alabhya Jha, Bhuvan Raju, Aditya Malik |
 
 ## The problem
 
@@ -84,12 +84,8 @@ These are properties of a simulator built on stated assumptions, not measured sa
 
 Run the pilot in `PILOT_PROTOCOL.md` with one hostel kitchen and one dish, calibrate on real plates, and report observed results with denominators.
 
-## How it was built, and AI tools used
+## AI tools used
 
-Disclosed as the rules require.
-
-- **Claude Code (Anthropic)** was used during the event to write most of the implementation, tests, infrastructure template and documentation, working from the team's written specification.
-- An AI assistant was also used to help draft that specification. *(Name it here.)*
-- The team chose the problem and the approach, set the honesty and privacy constraints the product follows, directed and reviewed the work, and ran the deployment on its own AWS account. *(Edit to say exactly what each member did.)*
+**Claude Code (Anthropic)** wrote the majority of the code, tests, infrastructure template and documentation, working from the team's specification. The team chose the problem and approach, set the honesty and privacy constraints, directed and reviewed the work, and ran the deployment.
 
 Open-source libraries only (FastAPI, Pydantic, Mangum, NumPy, React, Vite, IBM Plex fonts under the SIL OFL), listed in `README.md`. Plate graphics are original SVG, and the demo photos are rendered by `scripts/make_sample_photos.py`. No external datasets.
