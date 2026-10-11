@@ -109,7 +109,7 @@ Outputs: `evaluation/outputs/evaluation.json` and `EVALUATION.md`. The Evidence 
 Request types in the web app are generated from the API's OpenAPI schema, so a renamed field fails the type-check.
 
 ```powershell
-$env:PYTHONPATH = "servicespi"; $env:PROOFPLATE_STORE = "memory"
+$env:PYTHONPATH = "services/api"; $env:PROOFPLATE_STORE = "memory"
 python -c "import json; from proofplate.main import app; open('apps/web/openapi.json', 'w').write(json.dumps(app.openapi()))"
 cd apps\web; npm run gen:api
 ```
