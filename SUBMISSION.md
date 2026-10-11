@@ -22,7 +22,7 @@ Kitchens that try to learn from leftovers hit a trap: **an empty plate is ambigu
 A working tool for the serving counter and the kitchen manager, deployed on AWS.
 
 - **Serve.** Enter a diner token and get a first portion in scoops, with the likely range and the reason. The diner can always choose differently, and seconds are one tap.
-- **Return.** Record grams left and ask one question: *was that enough?* Grams come from a scale, or from a photo when there isn't one.
+- **Return.** Record grams left and ask one question: *was that enough?* Grams come from a scale, or from two photos of the plate, before and after, when there isn't one.
 - **Learn.** "Enough" means appetite was about this much. "Wanted more" means *at least* this much and can only raise an estimate. Unclear plates and leftovers caused by dislike or interruption are recorded but never lower anyone's estimate. The Learn page runs the real model three ways on the same empty plate so the difference is visible.
 - **Kitchen.** The estimates become how much to cook before service, how much to hold in reserve, when to start each batch and the modelled chance of running short. When stock or the refill station can't support the plan, it says *not feasible* and why. It never quietly lowers its own target.
 - **Evidence.** Observed, predicted and simulated results are kept apart, each with its sample size, and exportable.
@@ -33,7 +33,7 @@ Diners are anonymous tokens. No names, faces, calories or body data. Suggestions
 
 1. **Censored learning.** A Bayesian lognormal model with interval and right-censored likelihoods, so "wanted more" is treated as a lower bound rather than a target.
 2. **Seconds are designed in.** The portion policy trades leftover against trips back, and the kitchen plan forecasts what will be *served*, including refills and scoop rounding.
-3. **Photo estimate without a model download.** Compare the returned plate with an empty-plate photo, fit grams on a few weighed plates, and carry the estimate's own uncertainty into the model. Photos are analysed in the browser and never uploaded.
+3. **Leftovers from two photos.** Photograph the plate as served and as returned. A segmentation model running in the browser outlines the plate and the food in each, the user can correct either outline by tapping or brushing, and the known weight of the serving turns the change in area into grams with a stated range. Photos never leave the device.
 4. **Honest accounting.** A missing return is missing, not zero waste. Measured, simulated and imported records never mix. Nothing is claimed as "meals saved" or CO₂.
 
 ## Where AWS fits
@@ -65,18 +65,18 @@ The template also defines S3 and CloudFront, but new AWS accounts must be verifi
 - Like for like: a fixed portion that leaves as few diners wanting more as ProofPlate (10.8%) would leave about 55 g per plate, against ProofPlate's 29.5 g. That figure is interpolated.
 - When only half of diners walk back for seconds, a personal average without the censoring logic leaves less food (13.6 g) but 47.9% of diners wanting more, worse than the usual portion's 39.6%. ProofPlate leaves 25.1 g with 28.4%.
 
-These are properties of a simulator built on stated assumptions, not measured savings. The photo estimate has been checked on generated images only.
+These are properties of a simulator built on stated assumptions, not measured savings. The photo estimate has been checked on generated images, and on one real photograph for outlining; its grams have not been validated against a scale.
 
 ## Verification
 
-- 80 Python tests and 8 photo-estimate unit tests pass, covering likelihoods against analytic values, censoring behaviour, mass balance, idempotency, corrections, tenant isolation, and one storage contract run on memory, SQLite and DynamoDB adapters.
+- 81 Python tests and 13 photo-estimate unit tests pass, covering likelihoods against analytic values, censoring behaviour, mass balance, idempotency, corrections, tenant isolation, one storage contract run on memory, SQLite and DynamoDB adapters, and the plate/food selection and gram arithmetic of the photo estimate.
 - Scripted Chrome flows pass locally and against the live AWS URL: the public demo at desktop and phone widths, a Cognito-signed-in pilot flow against DynamoDB, and the photo estimate against generated truth.
 - Results and what was not verified are in `DEPLOYMENT.md`.
 
 ## Limitations
 
 - No field data, so effect in a real mess is unproven.
-- The photo estimate needs a fixed camera and a plate that contrasts with the food, and has not been validated on real photographs.
+- The photo estimate cannot see depth, so it reports a range. It has not been validated against weighed leftovers, and it struggles when the food is the colour of the plate.
 - Satisfaction is self-reported; one food is weighed at a time.
 - The simulator's behaviour model is an assumption.
 
@@ -88,4 +88,4 @@ Run the pilot in `PILOT_PROTOCOL.md` with one hostel kitchen and one dish, calib
 
 **Claude Code (Anthropic)** wrote the majority of the code, tests, infrastructure template and documentation, working from the team's specification. The team chose the problem and approach, set the honesty and privacy constraints, directed and reviewed the work, and ran the deployment.
 
-Open-source libraries only (FastAPI, Pydantic, Mangum, NumPy, React, Vite, IBM Plex fonts under the SIL OFL), listed in `README.md`. Plate graphics are original SVG, and the demo photos are rendered by `scripts/make_sample_photos.py`. No external datasets.
+Open-source libraries only (FastAPI, Pydantic, Mangum, NumPy, React, Vite, IBM Plex fonts under the SIL OFL), listed in `README.md`. The photo estimate runs SlimSAM (Apache-2.0) in the browser through Transformers.js (Apache-2.0) and ONNX Runtime Web (MIT), fetched from their public CDNs. Plate graphics are original SVG, and the demo photos are rendered by `scripts/make_sample_photos.py`. No external datasets.

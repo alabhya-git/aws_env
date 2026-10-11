@@ -32,7 +32,7 @@ A system that treats every empty plate as "that amount was right" keeps under-se
 - **Learn** — one diner's plates, how each was used, how the estimate moved, and "same empty plate, different evidence".
 - **Kitchen** — how much to cook before service, how much to hold in reserve, when to start each batch, the modelled chance of running short, and a clear *infeasible* state when stock or refill capacity cannot meet the plan.
 - **Evidence** — observed, predicted and simulated results kept apart, each with its sample size; CSV/JSON export; a print view.
-- **Photo estimate** — in the return form, estimate leftovers from a photo: empty-plate reference, calibration against weighed plates, on-device analysis, result saved as a labelled `photo_estimate` with its uncertainty.
+- **Leftovers from two photos** — in the return form, add a photo of the plate as served and one as returned. A segmentation model in the browser outlines the plate and the food, either outline can be corrected by tapping or brushing, and the result is saved as a labelled `photo_estimate` with its uncertainty. Photos are not uploaded.
 - **Setup** — scoop calibration, meal services, diner tokens (with export and deletion), and validated CSV import.
 
 Two workspaces that cannot touch each other:
@@ -154,4 +154,5 @@ Details, costs, verification and teardown: `DEPLOYMENT.md`.
 - Runtime libraries: FastAPI (MIT), Pydantic (MIT), Mangum (MIT), NumPy (BSD-3-Clause), React (MIT), Vite (MIT).
 - The complementary error function fit is the `erfcc` approximation from *Numerical Recipes*; it is verified against SciPy in the tests.
 - All diagrams, icons and plate graphics are original SVG. No photographs or third-party images are used.
+- Photo estimate, fetched by the browser at first use and not bundled: [Transformers.js](https://github.com/huggingface/transformers.js) (Apache-2.0) from jsDelivr, ONNX Runtime Web (MIT), and the [SlimSAM](https://huggingface.co/Xenova/slimsam-77-uniform) weights (Apache-2.0, derived from Meta's Segment Anything) from the Hugging Face Hub.
 - AI tools used during the build are listed in `SUBMISSION.md`.

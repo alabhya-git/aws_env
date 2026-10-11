@@ -57,7 +57,7 @@ export function Landing({ cfg }: { cfg: RuntimeConfig }) {
           <ol className="loop" style={{ marginTop: 12 }}>
             <li><b>1</b><span><strong>Calibrate the scoop.</strong> <span className="muted">Weigh about twenty scoops of the cooked dish, once per recipe.</span></span></li>
             <li><b>2</b><span><strong>Suggest a first portion.</strong> <span className="muted">With the likely range and the reason. The diner can always choose differently.</span></span></li>
-            <li><b>3</b><span><strong>Record seconds and the return.</strong> <span className="muted">Grams left, from the scale or from a photo, and “was that enough?”.</span></span></li>
+            <li><b>3</b><span><strong>Record seconds and the return.</strong> <span className="muted">Grams left, from the scale or from before and after photos, and “was that enough?”.</span></span></li>
             <li><b>4</b><span><strong>Update the estimate.</strong> <span className="muted">“Wanted more” is a lower bound, not a target. Unclear plates are not used.</span></span></li>
             <li><b>5</b><span><strong>Plan the kitchen.</strong> <span className="muted">Initial batch, reserve, and a plain warning when a plan cannot work.</span></span></li>
           </ol>
@@ -68,7 +68,7 @@ export function Landing({ cfg }: { cfg: RuntimeConfig }) {
           <dl className="facts" style={{ marginTop: 12 }}>
             <dt>Not a health tool</dt><dd>No names, faces, calories or body data. A suggestion never overrides what a diner asks for.</dd>
             <dt>Numbers are labelled</dt><dd>Every figure is observed, predicted or simulated, with its sample size. A missing return is missing, not zero waste.</dd>
-            <dt>Photos stay on the device</dt><dd>The photo estimate runs in the browser; only the estimated grams and its uncertainty are saved.</dd>
+            <dt>Photos stay on the device</dt><dd>Plate photos are analysed in the browser. Only the estimated grams, its uncertainty and the area figures are saved.</dd>
             <dt>No field results yet</dt><dd>Nothing here has been measured in a real kitchen. Simulated comparisons are not savings.</dd>
             <dt>Runs on AWS</dt><dd>Lambda runs the model, API Gateway fronts it, DynamoDB keeps pilot records and Cognito signs operators in.</dd>
           </dl>

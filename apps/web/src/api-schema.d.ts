@@ -1015,6 +1015,7 @@ export interface components {
             seconds_wait_min?: number | null;
             /** Photo Sd G */
             photo_sd_g?: number | null;
+            photo_detail?: components["schemas"]["PhotoDetail"] | null;
             /**
              * Losses G
              * @default 0
@@ -1149,6 +1150,36 @@ export interface components {
             token: string;
             /** Food Id */
             food_id: string;
+        };
+        /**
+         * PhotoDetail
+         * @description How a photo estimate was derived. Numbers only; the photos never leave the device.
+         */
+        PhotoDetail: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "before_after" | "after_only";
+            /** Share Before */
+            share_before?: number | null;
+            /** Share After */
+            share_after: number;
+            /** Reference G */
+            reference_g: number;
+            /** Exponent */
+            exponent: number;
+            /**
+             * Edited
+             * @default false
+             */
+            edited?: boolean;
+            /**
+             * Engine
+             * @default model
+             * @enum {string}
+             */
+            engine?: "model" | "by-hand";
         };
         /** Pilot_bootstrap */
         Pilot_bootstrap: {

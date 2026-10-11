@@ -24,9 +24,10 @@ Updated 11 October 2026, evening IST. Three statuses are kept apart on purpose.
 
 | Check | Command | Result |
 |---|---|---|
-| Unit, API and storage tests | `python -m pytest tests` | 80 passed |
-| Photo-estimate unit tests | `node --test src/photo.test.mjs` in `apps/web` | 8 passed |
-| Photo flow in the browser (local and live) | `python tests/e2e/photo_flow.py <url>` | passed; estimates 11/23/37 g against generated truth 10/23/37 g |
+| Unit, API and storage tests | `python -m pytest tests` | 81 passed |
+| Photo-estimate unit tests | `node --test src/photo.test.mjs` in `apps/web` | 13 passed |
+| Photo flow in the browser | `python tests/e2e/photo_flow.py <url>` | passed with the model (automatic outlines, every correction tool, 36 g +/- 14 against a generated truth of 27 g) and with the model's CDN blocked (by hand) |
+| One real photo (white rice, steel bowl), by hand in the browser | not scripted; the photo is not in the repo | bowl and rice outlined automatically; 34.6% / 34.2% / 34.9% of the plate across the two slots and a rescaled copy |
 | Web type-check (request types generated from the API's OpenAPI schema) and production build | `npm run build` in `apps/web` | passed |
 | Demo browser walkthrough, desktop 1366 px and phone 390 px | `python tests/e2e/walkthrough.py http://127.0.0.1:8000` | passed; screenshots in `docs/screenshots/` |
 | Pilot browser flow (local dev sign-in, SQLite) | `python tests/e2e/pilot_flow.py http://127.0.0.1:8000 --user manager` | passed |
@@ -44,6 +45,8 @@ Not verified: anything on AWS, including the DynamoDB adapter against a real tab
 - A food not on the selected service's menu could be selected, giving an error on lookup.
 - Overlapping labels on the "same empty plate" chart.
 - Six request-shape mismatches surfaced when the web client was typed against the generated API schema.
+- Creating a meal service put every food on its menu and failed once a workspace had more than eight foods. Services now have a menu picker.
+- Found only by testing a real photo: in the after slot, reflections on a steel bowl were accepted as rice (91% of the plate instead of about 35%); the plate could be mistaken for a tray-shaped outline; and the same photo read 17% differently depending on where the model was first prompted. All three are fixed, with unit tests where a synthetic case reproduces them.
 
 ## Decisions
 
@@ -61,7 +64,7 @@ Not verified: anything on AWS, including the DynamoDB adapter against a real tab
 ## Added after the first deploy
 
 - Interface redesign against `DESIGN.md` (self-hosted IBM Plex, ruled sections, stamped labels, underline navigation, phone-first Serve).
-- Photo-assisted leftover estimate: on-device background subtraction against an empty-plate reference, calibrated to grams on weighed plates, saved as `photo_estimate` with its uncertainty. Checked on generated images only.
+- Leftovers from two photos (rebuilt on 12 Oct): a segmentation model in the browser outlines the plate and food in a before and an after photo; the known serving weight turns the change in area into grams with a range; outlines can be corrected by tap, brush and drag; saved as `photo_estimate` with a `photo_detail` record. The first version (an empty-plate reference plus weighed calibration plates) was removed: it treated the first upload as the empty plate, which is not how people use it.
 
 ## Not built
 

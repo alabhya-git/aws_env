@@ -176,10 +176,20 @@ def test_photo_estimate_is_labelled_and_widens_the_interval(setup):
         out[meas] = r["participation"]
         assert r["participation"]["return_measurement"] == meas
     assert out["photo_estimate"]["tolerance_g"] > out["weighed"]["tolerance_g"] + 10
+    assert out["photo_estimate"]["photo_detail"] is None           # optional: older clients do not send it
     assert out["photo_estimate"]["consumed_g"] == out["weighed"]["consumed_g"]
     g = call("evidence", {})["groups"][0]
     assert g["return_methods"].get("photo_estimate", 0) >= 1 and g["return_methods"].get("weighed", 0) >= 1
     assert client.post("/api/pilot/record_event", json={"args": ev(s, "return", token="T-ph-p", grams=5, photo_sd_g=0)}, headers=ALICE).status_code == 422
+    call("create_diner", {"token": "T-ph-d"})
+    call("record_event", ev(s, "serve_initial", token="T-ph-d", scoops=3))
+    detail = {"method": "before_after", "share_before": 0.41, "share_after": 0.09, "reference_g": 180, "exponent": 1.25, "edited": True, "engine": "model"}
+    r = call("record_event", ev(s, "return", token="T-ph-d", grams=27, measurement="photo_estimate", photo_sd_g=11,
+                                satisfaction="enough", leftover_reason="enough_food", photo_detail=detail))
+    assert r["participation"]["photo_detail"] == detail and r["event"]["photo_detail"]["share_after"] == 0.09
+    bad = {**detail, "share_after": 1.7}
+    assert client.post("/api/pilot/record_event", json={"args": ev(s, "return", token="T-ph-d", grams=5, photo_detail=bad)}, headers=ALICE).status_code == 422
+    assert client.post("/api/pilot/record_event", json={"args": ev(s, "return", token="T-ph-d", grams=5, photo_detail={**detail, "image": "data:..."})}, headers=ALICE).status_code == 422
 
 
 def test_serving_style_setting_changes_the_policy_and_needs_a_manager(setup):
@@ -205,6 +215,18 @@ def test_serving_style_setting_changes_the_policy_and_needs_a_manager(setup):
     assert cost(big, 1.0) > cost(small, 1.0)        # a small portion is penalised more when trips cost more
     assert call("update_settings", {"refill_friction_g": 20})["refill_friction_g"] == 20
     assert client.post("/api/pilot/update_settings", json={"args": {"refill_friction_g": 500}}, headers=ALICE).status_code == 422
+
+
+def test_a_service_lists_its_own_menu_and_rejects_food_that_is_not_on_it(setup):
+    s = setup
+    dal = call("create_food", {"name": "Dal tadka"})
+    ses = call("create_session", {"name": "Dinner", "service_date": "2026-10-12", "food_ids": [dal["id"]]})
+    assert ses["food_ids"] == [dal["id"]]
+    err = call("diner_state", {"session_id": ses["id"], "token": s["token"], "food_id": s["food"]}, expect=422)
+    assert err["code"] == "FOOD_NOT_ON_MENU"
+    too_many = [f"food-{i}" for i in range(13)]
+    assert client.post("/api/pilot/create_session", json={"args": {"name": "X", "service_date": "2026-10-12", "food_ids": too_many}}, headers=ALICE).status_code == 422
+    assert client.post("/api/pilot/create_session", json={"args": {"name": "X", "service_date": "2026-10-12", "food_ids": []}}, headers=ALICE).status_code == 422
 
 
 def test_tenant_isolation(setup):

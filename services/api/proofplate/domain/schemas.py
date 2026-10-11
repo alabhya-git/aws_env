@@ -25,6 +25,18 @@ class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class PhotoDetail(Strict):
+    """How a photo estimate was derived. Numbers only; the photos never leave the device."""
+
+    method: Literal["before_after", "after_only"]
+    share_before: Optional[float] = Field(default=None, ge=0, le=1)   # food as a share of the plate's area
+    share_after: float = Field(ge=0, le=1)
+    reference_g: int = Field(ge=0, le=MAX_G)                           # grams in the before photo
+    exponent: float = Field(ge=0.5, le=2.5)                            # mass ~ area^exponent
+    edited: bool = False                                               # outline corrected by hand
+    engine: Literal["model", "by-hand"] = "model"
+
+
 class EventIn(Strict):
     """One immutable observation. `event_id` is the idempotency key."""
 
@@ -41,6 +53,7 @@ class EventIn(Strict):
     seconds_status: Optional[SecondsStatus] = None
     seconds_wait_min: Optional[int] = Field(default=None, ge=0, le=240)
     photo_sd_g: Optional[int] = Field(default=None, ge=1, le=1000)  # stated uncertainty of a photo estimate
+    photo_detail: Optional[PhotoDetail] = None
     losses_g: int = Field(default=0, ge=0, le=MAX_G)
     incoming_transfer_g: int = Field(default=0, ge=0, le=MAX_G)
     transfer_unknown: bool = False
@@ -82,7 +95,7 @@ class CalibrationIn(Strict):
 class SessionIn(Strict):
     name: str = Field(min_length=1, max_length=60)
     service_date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
-    food_ids: list[str] = Field(min_length=1, max_length=8)
+    food_ids: list[str] = Field(min_length=1, max_length=12)
     expected_attendance: int = Field(default=120, ge=1, le=5000)
     attendance_cv: float = Field(default=0.10, ge=0, le=0.6)
     intervals: int = Field(default=6, ge=2, le=16)

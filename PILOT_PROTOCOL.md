@@ -50,6 +50,18 @@ Weighed quantities and scoop-estimated quantities stay labelled as such in every
 
 If a step is missed, leave it blank. Do not guess. A missing return is recorded as missing, not as zero waste.
 
+## Photos instead of a scale (optional)
+
+When a plate cannot be weighed, leftovers can be estimated from two photos. Treat these as lower-quality measurements; they are labelled as photo estimates and carry a wider uncertainty.
+
+1. Right after serving, before any seconds, photograph the plate from directly above with the whole plate in frame. Check the outline and correct it if needed.
+2. When the plate comes back, photograph the same plate the same way. Check the outline.
+3. Use the estimate, or weigh the plate if the range shown is too wide to be useful.
+
+Use plates that contrast with the food. If seconds were served, weigh instead: the before photo no longer shows everything that was on the plate.
+
+To learn how good the photo estimate is in your kitchen, weigh the leftovers as well for the first twenty or so plates and compare. That comparison has not been done yet.
+
 ## Things that make a plate unusable for learning
 
 These are still recorded; they just do not move anyone's estimate.

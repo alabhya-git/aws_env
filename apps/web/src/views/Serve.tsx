@@ -4,7 +4,7 @@ import { Link, useWs } from "../App";
 import { Plate } from "../Plate";
 import { BASIS, CLASS_LABEL, grams, istTime, LEFTOVER_REASONS, REASONS, SATISFACTION, scoopsText, SECONDS_STATUS } from "../text";
 import { ErrorNote, Field, Loading, Stepper, useToast } from "../ui";
-import { PhotoMeter } from "./PhotoMeter";
+import { PhotoDetail, PhotoPair } from "./PhotoPair";
 
 type EventArgs = OpArgs["record_event"];
 type EventFields = Omit<EventArgs, "event_id" | "session_id" | "diner_token" | "food_id">;
@@ -79,7 +79,8 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
   const [reason, setReason] = useState<NonNullable<EventArgs["leftover_reason"]>>(correcting ? plate.leftover_reason || "none" : "none");
   const [seconds, setSeconds] = useState<NonNullable<EventArgs["seconds_status"]>>(plate.seconds_g?.length ? "served" : "not_requested");
   const [photoSd, setPhotoSd] = useState<number | null>(null);
-  const [photoOpen, setPhotoOpen] = useState(false);
+  const [photoDetail, setPhotoDetail] = useState<PhotoDetail | null>(null);
+  const typed = (v: string) => { setReturned(v); if (measurement === "photo_estimate") { setMeasurement("weighed"); setPhotoSd(null); setPhotoDetail(null); } };
   const [losses, setLosses] = useState("");
   const [shared, setShared] = useState(false);
   const g = returned === "" ? null : Number(returned);
@@ -89,24 +90,27 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
     if (!valid) return;
     onSubmit({
       type: "return", grams: g, measurement, satisfaction,
-      ...(measurement === "photo_estimate" && photoSd ? { photo_sd_g: photoSd } : {}),
+      ...(measurement === "photo_estimate" && photoSd ? { photo_sd_g: photoSd, ...(photoDetail ? { photo_detail: photoDetail } : {}) } : {}),
       leftover_reason: g! > 0 ? reason : "none",
       seconds_status: seconds, losses_g: losses ? Number(losses) : 0, transfer_unknown: shared,
     });
   };
   return (
-    <form className="stack" onSubmit={submit}>
+    <form className="stack l" onSubmit={submit}>
+      <PhotoPair plateKey={`${plate.session_id}|${plate.diner_token}|${plate.food_id}`} foodId={plate.food_id} initialG={plate.initial_g} totalG={plate.total_served_g}
+        onUse={(grams, sd, detail) => { setReturned(String(grams)); setMeasurement("photo_estimate"); setPhotoSd(sd); setPhotoDetail(detail); }} />
+      <div className="stack">
       <h3>{correcting ? "Correct the return" : "Plate came back"}</h3>
       <div className="row top">
         <Field label="Edible food left (grams)" hint="Weigh the plate, subtract the empty plate.">
-          <input className="input big num" inputMode="numeric" pattern="[0-9]*" value={returned} onChange={(e) => { setReturned(e.target.value.replace(/[^0-9]/g, "").slice(0, 4)); if (measurement === "photo_estimate") { setMeasurement("weighed"); setPhotoSd(null); } }} placeholder="0" style={{ maxWidth: 170 }} aria-label="Edible food left in grams" />
+          <input className="input big num" inputMode="numeric" pattern="[0-9]*" value={returned} onChange={(e) => typed(e.target.value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="0" style={{ maxWidth: 170 }} aria-label="Edible food left in grams" />
         </Field>
         <div className="field">
           <span>Quick</span>
           <div className="chips">
-            <button type="button" aria-pressed={returned === "0"} onClick={() => setReturned("0")}>Empty plate</button>
-            <button type="button" onClick={() => setReturned(String(Math.round(scoopG / 2)))}>≈ ½ scoop</button>
-            <button type="button" onClick={() => setReturned(String(Math.round(scoopG)))}>≈ 1 scoop</button>
+            <button type="button" aria-pressed={returned === "0"} onClick={() => typed("0")}>Empty plate</button>
+            <button type="button" onClick={() => typed(String(Math.round(scoopG / 2)))}>≈ ½ scoop</button>
+            <button type="button" onClick={() => typed(String(Math.round(scoopG)))}>≈ 1 scoop</button>
           </div>
         </div>
         <div className="field">
@@ -117,14 +121,6 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
             {measurement === "photo_estimate" ? <button type="button" aria-pressed>Photo estimate ± {photoSd} g</button> : null}
           </div>
         </div>
-      </div>
-      <div className="photo-box">
-        <button type="button" className="btn sm" aria-expanded={photoOpen} onClick={() => setPhotoOpen((o) => !o)}>
-          {photoOpen ? "Hide photo estimate" : "Estimate leftovers from a photo"}
-        </button>
-        {photoOpen ? (
-          <PhotoMeter onUse={(grams, sd) => { setReturned(String(grams)); setMeasurement("photo_estimate"); setPhotoSd(sd); setPhotoOpen(false); }} />
-        ) : null}
       </div>
       <div className="field">
         <span>Ask the diner: was that enough?</span>
@@ -164,6 +160,7 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
         <button className="btn primary big" disabled={!valid || busy}>{busy ? "Saving…" : correcting ? "Save correction" : "Save return"}</button>
         {onCancel ? <button type="button" className="btn ghost" onClick={onCancel}>Cancel</button> : null}
         {!valid && g !== null ? <span className="muted small">Choose an answer to “was that enough?”.</span> : null}
+      </div>
       </div>
     </form>
   );

@@ -35,18 +35,44 @@ Implemented in `services/api/proofplate/domain/rules.py::classify`.
 
 The interval half-width comes from how the plate was measured: the scoop calibration's spread for scoop-estimated servings, the scale resolution for weighed returns, plus 3% for the behavioural assumption that "enough" means demand was about what was eaten.
 
-## Photo-assisted leftovers
+## Leftovers from two photos
 
-A scale reading is the default. As an option, the leftover amount can come from a photo of the returned plate. This is classical image arithmetic in the browser, not a learned model, and the photo never leaves the device.
+A scale reading is the default. As an option, leftovers can be estimated from two photos: the plate as served, and the same plate when it comes back. The before photo's weight is already known from the recorded serving, so it calibrates the after photo. There is no separate calibration step.
 
-1. **Reference.** With the camera fixed over the return station, photograph the empty plate once.
-2. **Detect.** Inside an operator-placed circle on the plate, each pixel is compared with the reference after correcting exposure from the plate's outer rim. Pixels that changed by more than a noise-derived threshold (between 26 and 90 on a 0-441 colour distance) are food. Isolated specks are removed with a 3x3 majority filter.
-3. **Calibrate.** The share of the circle covered is mapped to grams with a power curve fitted to photos of plates the operator weighed (`grams = k * coverage^p`, `p` limited to 0.6-2.0). With three or more points the leave-one-out error is reported; with fewer, the stated uncertainty is wide.
-4. **Record.** The estimate is saved as measurement `photo_estimate` with its own standard deviation, which widens the censored interval around the amount eaten, so a photo estimate teaches the model less sharply than a weighed value.
+**1. Outline.** In each photo the app finds the plate and the food on it. It uses SlimSAM, a compressed Segment Anything model (Apache-2.0), run in the browser with Transformers.js on ONNX Runtime Web. The model only proposes outlines around a point; the app's own logic chooses between them:
 
-Guards: a weighed calibration plate that reads as empty is rejected (the food does not stand out from the plate); low contrast, a large lighting change, a nearly full plate and a mis-placed circle each raise a visible flag; editing the number by hand returns the record to "weighed".
+- The plate is the largest *round* outline around the centre of the photo. Roundness matters because a tray, a placemat or the table can be the largest outline, but a plate or bowl seen from above is an ellipse.
+- The food is the outline that separates most cleanly in colour from the rest of the plate.
+- The model is then asked again with points spread across that first outline, so the result does not depend on where the first point happened to fall.
 
-What it cannot do: it does not recognise food, estimate depth, or work on food that matches the plate colour (white rice on a white plate). It needs a fixed camera position and re-calibration when the plate type or camera moves. Accuracy was checked only on generated images (see `apps/web/src/photo.test.mjs`, `tests/e2e/photo_flow.py`); it has not been validated on real photographs of real food.
+**2. Leftovers.** In the after photo, the app looks for patches the colour of the food seen before, corrected for lighting using the plate's own rim. A patch is kept only if the model can outline it cleanly and it is more food-coloured than plate-coloured. This rule exists because a reflection on a steel plate is as bright as rice.
+
+**3. Correct.** Either outline can be fixed by hand: tap food to add it, tap what is not food to remove it, step to a smaller or larger outline, paint or erase with a brush, drag the plate outline, undo, or mark the plate as empty.
+
+**4. Measure.** Food is expressed as a share of the plate's area, which cancels out how close the camera was. Then
+
+    grams left = grams before x (share after / share before) ^ 1.25
+
+Area cannot see depth. Food spread flat loses mass in proportion to area (exponent 1.0); a mound that shrinks in every direction loses it faster (exponent 1.5). The estimate uses the middle, and the stated range runs between the two. The standard deviation combines half that range, 14% for imperfect outlines, and 3 g.
+
+**5. Record.** The result is saved as measurement `photo_estimate` with its standard deviation, which widens the interval the demand model learns from, so a photo teaches it less sharply than a scale. A `photo_detail` record keeps the two shares, the reference grams, the exponent, whether an outline was corrected by hand, and whether the model or the by-hand path was used. The photos themselves are analysed on the device and are never uploaded or stored by the server.
+
+**After photo only.** Each confirmed before photo is also an example of "this share of the plate is this many grams of this food". With such examples saved on the device, an after photo can be read on its own, with a wider uncertainty.
+
+**Without the model.** If the model cannot be downloaded, the app starts from a rough colour guess and the same tools work by hand (taps fill by colour).
+
+### What was checked
+
+- 13 unit tests of the selection and estimation logic on synthetic frames (`apps/web/src/photo.test.mjs`).
+- A browser test on a generated pair in which the after photo is taken closer, off-centre and darker (`tests/e2e/photo_flow.py`): both outlines were within the test's tolerance of the rendered truth, and the estimate was 36 g +/- 14 (range 26 to 52) against a generated truth of 27 g. The generator assumes an exponent of 1.35, so the truth lying inside the range is by construction.
+- One real photograph supplied by the team, white rice in a steel bowl: the bowl and the rice were outlined with no input. Used in both slots it read 34.6% and 34.2% of the plate, and 34.9% when rescaled to imitate a more distant shot. This shows the outlines are consistent, not that the grams are right.
+
+### What was not checked
+
+- **No real before and after pair with weighed leftovers has been tested.** The gram estimate has not been validated against a scale.
+- Mixed dishes, sauces, food the same colour as the plate, strong shadows, steep camera angles and square plates.
+- Phones. On a laptop the first photo takes about 10 s including a one-time 14 MB model download, and about 5 s after that; phones will be slower.
+- The first use needs jsDelivr and Hugging Face to be reachable to fetch the library and the model.
 
 ## The model
 

@@ -74,6 +74,7 @@ Rejected: purple/indigo gradients, glow, glass, neon on near-black, cream-and-te
 - **Tables:** no zebra, no box. Hairline between rows, numerals right-aligned and tabular, header in sentence case.
 - **Stamped label:** 2 px radius, 1 px border, 12.5 px. Observed = `--scale`, Predicted = `--s1`, Simulated = `--amber`. Never filled.
 - **Charts:** one y-scale, ink text, series colours from `--s1..3`, direct labels, legend when two or more series, a table alternative, units on axes.
+- **Photo editor:** the photo is the workspace. Food is tinted amber with a solid edge, the plate rim is a dashed white ellipse, and taps are marked with a plus (include) or minus (exclude) so colour is never the only cue. One row of five tools, one hint line for the active tool, and a single readout: the food's share of the plate. Waiting states say what is happening and always offer the by-hand route.
 - **Feedback:** inline for form errors and results; toast only for "saved". Errors say what failed and what to do.
 - **Focus:** 3 px `--scale` outline at 45% opacity, offset 2 px, on every control.
 

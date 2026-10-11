@@ -117,14 +117,19 @@ function Sessions() {
   const [att, setAtt] = useState(120);
   const [usual, setUsual] = useState(3);
   const [secs, setSecs] = useState(true);
+  const [menu, setMenu] = useState<string[] | null>(null);
   const [closing, setClosing] = useState<string | null>(null);
+  // default menu: the most recently added foods that have a calibrated scoop (a service holds at most 12 foods)
+  const calibrated = ws.boot.foods.filter((f) => ws.boot.calibrations.some((c) => c.food_id === f.id));
+  const newest = (list: any[]) => [...list].sort((x, y) => String(y.created_at || "").localeCompare(String(x.created_at || ""))).slice(0, 12).map((f) => f.id as string);
+  const onMenu = menu ?? newest(calibrated.length ? calibrated : ws.boot.foods);
   const [prepared, setPrepared] = useState("");
   const [surplus, setSurplus] = useState("");
   const [dest, setDest] = useState("unknown");
   const create = async (e: FormEvent) => {
     e.preventDefault();
-    const out = await a.run("create_session", { name, service_date: date, food_ids: ws.boot.foods.map((f) => f.id), expected_attendance: att, conventional_scoops: usual, seconds_accessible: secs }, "Meal service created");
-    if (out) ws.setSessionId(out.id);
+    const out = await a.run("create_session", { name, service_date: date, food_ids: onMenu, expected_attendance: att, conventional_scoops: usual, seconds_accessible: secs }, "Meal service created");
+    if (out) { ws.setSessionId(out.id); setMenu(null); }
   };
   const close = async (id: string) => {
     const patch: OpArgs["update_session"] = { session_id: id, status: "closed" };
@@ -180,7 +185,24 @@ function Sessions() {
           <Field label="Usual first serving"><select className="input" value={usual} onChange={(e) => setUsual(Number(e.target.value))}>{[1, 1.5, 2, 2.5, 3, 3.5, 4, 5].map((v) => <option key={v} value={v}>{scoopsText(v)}</option>)}</select></Field>
           <label className="row" style={{ minHeight: 44, marginTop: 20 }}><input type="checkbox" checked={secs} onChange={(e) => setSecs(e.target.checked)} /> Seconds are easy to get</label>
         </div>
-        <div><button className="btn primary" disabled={a.busy || !ws.boot.foods.length}>Create service</button>{!ws.boot.foods.length ? <span className="muted small"> Add a food first.</span> : null}</div>
+        {ws.boot.foods.length ? (
+          <div className="field">
+            <span>On the menu</span>
+            <div className="chips">
+              {ws.boot.foods.map((f) => {
+                const on = onMenu.includes(f.id);
+                return (
+                  <button type="button" key={f.id} aria-pressed={on} disabled={!on && onMenu.length >= 12}
+                    onClick={() => setMenu(on ? onMenu.filter((x) => x !== f.id) : [...onMenu, f.id])}>
+                    {f.name} · {f.recipe_version}
+                  </button>
+                );
+              })}
+            </div>
+            <small>Foods served at this service. Only these can be recorded in it.</small>
+          </div>
+        ) : null}
+        <div><button className="btn primary" disabled={a.busy || !onMenu.length}>Create service</button>{!ws.boot.foods.length ? <span className="muted small"> Add a food first.</span> : !onMenu.length ? <span className="muted small"> Put at least one food on the menu.</span> : null}</div>
         <p className="small muted">Batch size, lead time, stock and refill capacity start at defaults and can be adjusted on the Kitchen page.</p>
       </form>
       <ErrorNote error={a.error} />
