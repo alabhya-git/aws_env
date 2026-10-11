@@ -9,8 +9,8 @@
 | App and API | https://imh92ymqaa.execute-api.ap-south-1.amazonaws.com |
 | Region | ap-south-1 (Mumbai) |
 | Stack | `proofplate-prod` (CloudFormation, SAM) |
-| Deployed revision | code at `4fa4cf9` (redesign and photo estimate); later commits are documentation only |
-| Deployed | 11 October 2026, redeployed about 22:57 IST (first deploy about 22:28) |
+| Deployed revision | code at `10092ce` (before/after photo estimate); later commits are documentation only |
+| Deployed | 12 October 2026, about 02:40 IST. Earlier deploys: 11 October, 22:28 and 22:57 |
 
 **Why no CloudFront.** The first deploy failed at the CloudFront distribution: *"Your account must be verified before you can add new CloudFront resources"* (AWS Support verification is needed on a new account). The stack was rolled back and redeployed with `-NoCloudFront`. The web app is therefore served by the Lambda through the API Gateway HTTPS URL, which is a supported fallback in the template. The S3 bucket and Origin Access Control from the full design are not used in this deployment, and the web bucket created by the stack is empty. Once the account is verified, `scripts\deploy.ps1` without `-NoCloudFront` adds CloudFront and publishes the app to S3.
 
@@ -27,14 +27,19 @@
 | Pilot browser flow with real Cognito sign-in: calibrate, serve, seconds, return, changed suggestion, reload, correction, evidence, sign out | passed; records written to and read from DynamoDB |
 | Tenant isolation: operator of a second site | sees 0 foods, services and diners; a forged `site_id` in the body is rejected with 422 |
 | Warm latency from the build machine, Mumbai region, including network | demo bootstrap about 0.25 s; kitchen plan about 1.1 s |
-| Redesigned interface and photo estimate (second deploy) | public walkthrough passed at desktop and phone widths; photo flow passed (generated photos served from Lambda, estimates 11, 23 and 37 g against generated truth 10, 23 and 37 g); Cognito pilot flow passed again |
-| Self-hosted fonts and sample photos | served from the same origin (200) |
+| Redesigned interface (second deploy) | public walkthrough passed at desktop and phone widths; Cognito pilot flow passed again |
+| Before/after photo estimate (third deploy) | photo flow passed against the live URL with the segmentation model loaded from its public CDNs (automatic outlines, every correction tool, 36 g +/- 14 against a generated truth of 27 g) and with those CDNs blocked (by hand) |
+| One real photograph on the live site (white rice in a steel bowl) | bowl and rice outlined automatically; 34.6% of the plate in the before slot and 34.2% in the after slot |
+| A photo-estimate return through the signed-in API | stored in DynamoDB with its `photo_detail`; counted under return methods in Evidence; used for learning with a wider tolerance |
+| Service creation with a chosen menu | passed in the live pilot flow |
+| Self-hosted fonts, the worker script and sample photos | served from the same origin (200) |
 | Test data | a throwaway operator and records were used each time, then deleted; the table and user pool are empty |
 
 ### Not verified
 
 - CloudFront, S3 publishing and the deep-link rewrite function (not created).
-- Photo estimates on real photographs of real food, or with a real camera on the deployed site. Only generated images were used.
+- The photo estimate's grams against a scale. No real before and after pair with weighed leftovers has been tested, and no phone camera has been used on the deployed site.
+- The photo estimate when jsDelivr or Hugging Face are slow or unreachable from the user's network, beyond the scripted by-hand fallback.
 - Cold-start time (not measured separately).
 - Records surviving a redeploy: the table has a Retain policy and was not replaced by the second deploy, but a redeploy with data in it was not tested.
 - Deployment from a second AWS account.
