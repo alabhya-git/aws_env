@@ -24,7 +24,9 @@ Updated 11 October 2026, evening IST. Three statuses are kept apart on purpose.
 
 | Check | Command | Result |
 |---|---|---|
-| Unit, API and storage tests | `python -m pytest tests` | 79 passed |
+| Unit, API and storage tests | `python -m pytest tests` | 80 passed |
+| Photo-estimate unit tests | `node --test src/photo.test.mjs` in `apps/web` | 8 passed |
+| Photo flow in the browser (local and live) | `python tests/e2e/photo_flow.py <url>` | passed; estimates 11/23/37 g against generated truth 10/23/37 g |
 | Web type-check (request types generated from the API's OpenAPI schema) and production build | `npm run build` in `apps/web` | passed |
 | Demo browser walkthrough, desktop 1366 px and phone 390 px | `python tests/e2e/walkthrough.py http://127.0.0.1:8000` | passed; screenshots in `docs/screenshots/` |
 | Pilot browser flow (local dev sign-in, SQLite) | `python tests/e2e/pilot_flow.py http://127.0.0.1:8000 --user manager` | passed |
@@ -56,9 +58,14 @@ Not verified: anything on AWS, including the DynamoDB adapter against a real tab
 | Two-trip availability limit set to 50% | Chosen on development seeds 9001–9002 with `evaluation/explore_policy.py`, not on reported seeds |
 | Offline entry by paper sheet and CSV import, not an offline outbox | A half-reliable outbox loses data silently |
 
-## Not built (optional in the specification)
+## Added after the first deploy
 
-Photo attachments, camera plate matching, connected scale, bilingual text, offline outbox.
+- Interface redesign against `DESIGN.md` (self-hosted IBM Plex, ruled sections, stamped labels, underline navigation, phone-first Serve).
+- Photo-assisted leftover estimate: on-device background subtraction against an empty-plate reference, calibrated to grams on weighed plates, saved as `photo_estimate` with its uncertainty. Checked on generated images only.
+
+## Not built
+
+Photo storage (photos are deliberately never uploaded), recognition of food types, connected scale, bilingual text, offline outbox.
 
 ## Waiting on people
 

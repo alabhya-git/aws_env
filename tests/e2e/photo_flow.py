@@ -62,6 +62,7 @@ def main() -> None:
         assert read_estimate(page)[0] == 0, "an empty plate should read as 0 g"
 
         page.locator(".photo").get_by_role("button", name="About a scoop left", exact=True).click()
+        expect(page.locator(".readout .figure")).to_have_text(re.compile(r"^2\d g$"))   # wait for this photo's result, not the last one
         expect(page.get_by_role("button", name=re.compile(r"^Use \d+ g as the returned amount"))).to_be_visible()
         page.get_by_role("button", name=re.compile(r"^Use \d+ g as the returned amount")).click()
         expect(page.get_by_role("button", name=re.compile(r"Photo estimate ± \d+ g"))).to_be_visible()

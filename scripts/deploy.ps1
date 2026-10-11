@@ -22,6 +22,7 @@ if (-not (Get-Command aws -ErrorAction SilentlyContinue)) { $aws = "C:\Program F
 $node = Join-Path (Split-Path -Parent $root) ".tools\node-v24.21.0-win-x64"
 if (Test-Path $node) { $env:Path = "$node;$env:Path" }
 $stack = "proofplate-$Stage"
+$env:AWS_DEFAULT_REGION = $Region   # every aws call below, including the identity check, uses this region
 
 function Check($what) { if ($LASTEXITCODE -ne 0) { throw "$what failed (exit $LASTEXITCODE)" } }
 

@@ -23,6 +23,7 @@ A working tool for the serving counter and the kitchen manager.
 1. **Calibrate** the serving scoop for a dish by weighing about twenty scoops.
 2. **Suggest** each diner's first portion, with the likely range and the reason. The diner can always ask for something else, and seconds are always one tap away.
 3. **Record** seconds, the grams left on the plate, and one question: *was that enough?*
+3b. **Measure by photo when there is no scale.** Photograph the empty plate once, calibrate against a few weighed plates, then estimate leftovers from a photo. The estimate carries its own uncertainty into the model and is labelled as a photo estimate; photos are analysed in the browser and never uploaded.
 4. **Learn** correctly. "Enough" means appetite was about this much. "Wanted more" means at least this much, and can only raise an estimate. Unclear plates, and leftovers caused by dislike or interruption, are recorded but do not move anyone's estimate.
 5. **Plan the kitchen**: how much to cook before service, how much to hold in reserve, when to start each batch, and the modelled chance of running short. When stock or the refill station cannot support the plan, the app says "not feasible" and why. It never quietly lowers its own target.
 6. **Show the evidence** split into observed, predicted and simulated, each with its sample size.
@@ -76,12 +77,14 @@ These are properties of a simulator built on stated assumptions. They are not me
 
 ## Verification
 
-- 79 automated tests pass: numerics against SciPy, likelihoods against analytic values, censoring behaviour, policy and planner constraints, mass balance, idempotency, corrections, tenant isolation, demo/pilot isolation, and one storage contract run against in-memory, SQLite and DynamoDB (moto) adapters.
+- 80 automated Python tests and 8 photo-estimate unit tests pass: numerics against SciPy, likelihoods against analytic values, censoring behaviour, policy and planner constraints, mass balance, idempotency, corrections, tenant isolation, demo/pilot isolation, and one storage contract run against in-memory, SQLite and DynamoDB (moto) adapters.
+- A scripted Chrome flow checks the photo estimate against generated truth, and records a return from it.
 - A scripted Chrome walkthrough covers serve → seconds → return → changed suggestion → kitchen recompute → infeasible plan → evidence export, at desktop and phone widths.
 - Deployed to AWS ap-south-1 and checked from outside: public demo walkthrough and a Cognito-signed-in pilot flow against DynamoDB, plus tenant-isolation and auth-failure checks. Results, and what was not verified, are in `DEPLOYMENT.md`.
 
 ## Limitations
 
+- The photo estimate is classical image arithmetic and has only been checked on generated images. It needs a fixed camera and a plate that contrasts with the food, and has not been validated on real photographs.
 - No field data. Effect in a real mess is unproven.
 - One food at a time, weighed separately. Mixed plates are out of scope.
 - Satisfaction is self-reported and can be wrong.

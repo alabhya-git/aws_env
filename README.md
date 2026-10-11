@@ -32,6 +32,7 @@ A system that treats every empty plate as "that amount was right" keeps under-se
 - **Learn** — one diner's plates, how each was used, how the estimate moved, and "same empty plate, different evidence".
 - **Kitchen** — how much to cook before service, how much to hold in reserve, when to start each batch, the modelled chance of running short, and a clear *infeasible* state when stock or refill capacity cannot meet the plan.
 - **Evidence** — observed, predicted and simulated results kept apart, each with its sample size; CSV/JSON export; a print view.
+- **Photo estimate** — in the return form, estimate leftovers from a photo: empty-plate reference, calibration against weighed plates, on-device analysis, result saved as a labelled `photo_estimate` with its uncertainty.
 - **Setup** — scoop calibration, meal services, diner tokens (with export and deletion), and validated CSV import.
 
 Two workspaces that cannot touch each other:
@@ -98,6 +99,7 @@ python tests\e2e\walkthrough.py http://127.0.0.1:8000   # full browser flow, des
 
 ```powershell
 python scripts\make_demo_seed.py
+python scripts\make_sample_photos.py   # generated demo photos for the photo estimate
 python -m evaluation.run_evaluation
 python -m evaluation.run_frontier
 ```
@@ -129,6 +131,7 @@ Details, costs, verification and teardown: `DEPLOYMENT.md`.
 
 | File | What it covers |
 |---|---|
+| `DESIGN.md` | The interface design system and the research behind it |
 | `MODEL_CARD.md` | What is estimated, how plates become evidence, priors, policy, limits |
 | `EVALUATION.md` | Simulated policy comparison and frontier, with intervals |
 | `DATA_MANIFEST.md` | Every dataset and its provenance; retention and deletion |

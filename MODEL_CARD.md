@@ -35,6 +35,19 @@ Implemented in `services/api/proofplate/domain/rules.py::classify`.
 
 The interval half-width comes from how the plate was measured: the scoop calibration's spread for scoop-estimated servings, the scale resolution for weighed returns, plus 3% for the behavioural assumption that "enough" means demand was about what was eaten.
 
+## Photo-assisted leftovers
+
+A scale reading is the default. As an option, the leftover amount can come from a photo of the returned plate. This is classical image arithmetic in the browser, not a learned model, and the photo never leaves the device.
+
+1. **Reference.** With the camera fixed over the return station, photograph the empty plate once.
+2. **Detect.** Inside an operator-placed circle on the plate, each pixel is compared with the reference after correcting exposure from the plate's outer rim. Pixels that changed by more than a noise-derived threshold (between 26 and 90 on a 0-441 colour distance) are food. Isolated specks are removed with a 3x3 majority filter.
+3. **Calibrate.** The share of the circle covered is mapped to grams with a power curve fitted to photos of plates the operator weighed (`grams = k * coverage^p`, `p` limited to 0.6-2.0). With three or more points the leave-one-out error is reported; with fewer, the stated uncertainty is wide.
+4. **Record.** The estimate is saved as measurement `photo_estimate` with its own standard deviation, which widens the censored interval around the amount eaten, so a photo estimate teaches the model less sharply than a weighed value.
+
+Guards: a weighed calibration plate that reads as empty is rejected (the food does not stand out from the plate); low contrast, a large lighting change, a nearly full plate and a mis-placed circle each raise a visible flag; editing the number by hand returns the record to "weighed".
+
+What it cannot do: it does not recognise food, estimate depth, or work on food that matches the plate colour (white rice on a white plate). It needs a fixed camera position and re-calibration when the plate type or camera moves. Accuracy was checked only on generated images (see `apps/web/src/photo.test.mjs`, `tests/e2e/photo_flow.py`); it has not been validated on real photographs of real food.
+
 ## The model
 
 D is lognormal with unknown location μ and spread σ. The posterior over (μ, σ) is held as normalised log-weights on a bounded grid: 72 values of μ covering 15 g to 1,200 g, and 30 values of σ from 0.06 to 1.0.
