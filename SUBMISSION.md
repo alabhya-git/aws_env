@@ -1,101 +1,95 @@
-# ProofPlate — Environmental Hacks submission
+# ProofPlate
 
-**Track:** Waste and Energy
-**One line:** Serve a better first portion, keep seconds available, and show what actually changed.
+**An empty plate doesn't mean "enough". ProofPlate learns the difference, and turns it into the next meal's portion and cooking plan.**
+
+Environmental Hacks · Waste and Energy track
 
 | | |
 |---|---|
-| Live app | https://imh92ymqaa.execute-api.ap-south-1.amazonaws.com |
+| Live app | https://imh92ymqaa.execute-api.ap-south-1.amazonaws.com (open **Open the demo**) |
 | Repository | https://github.com/alabhya-git/aws_env |
 | Demo video | *(add the YouTube URL)* |
 | Team | *(add names)* |
 
 ## The problem
 
-A college mess serves hundreds of plates in an hour. The person with the ladle decides each first portion before knowing how hungry the diner is. Serve too much and edible food is scraped into the bin. Serve too little and someone leaves hungry, or gives up on the queue for seconds.
+A college mess serves hundreds of plates an hour, and the person at the counter chooses each first portion without knowing how hungry the diner is. Too much goes in the bin. Too little and the diner leaves hungry or gives up on the queue for seconds.
 
-Kitchens that try to learn from leftovers hit a trap: **an empty plate is ambiguous.** It can mean "that was enough" or "I wanted more". A scale cannot tell the difference. Any system that reads every empty plate as "that portion was right" will keep under-serving exactly the diners who are hungriest.
+Kitchens that try to learn from leftovers hit a trap: **an empty plate is ambiguous.** It can mean "that was enough" or "I wanted more", and a scale can't tell which. A system that reads every empty plate as "the portion was right" keeps under-serving the hungriest diners, and calls it optimisation.
 
 ## What we built
 
-A working tool for the serving counter and the kitchen manager.
+A working tool for the serving counter and the kitchen manager, deployed on AWS.
 
-1. **Calibrate** the serving scoop for a dish by weighing about twenty scoops.
-2. **Suggest** each diner's first portion, with the likely range and the reason. The diner can always ask for something else, and seconds are always one tap away.
-3. **Record** seconds, the grams left on the plate, and one question: *was that enough?*
-3b. **Measure by photo when there is no scale.** Photograph the empty plate once, calibrate against a few weighed plates, then estimate leftovers from a photo. The estimate carries its own uncertainty into the model and is labelled as a photo estimate; photos are analysed in the browser and never uploaded.
-4. **Learn** correctly. "Enough" means appetite was about this much. "Wanted more" means at least this much, and can only raise an estimate. Unclear plates, and leftovers caused by dislike or interruption, are recorded but do not move anyone's estimate.
-5. **Plan the kitchen**: how much to cook before service, how much to hold in reserve, when to start each batch, and the modelled chance of running short. When stock or the refill station cannot support the plan, the app says "not feasible" and why. It never quietly lowers its own target.
-6. **Show the evidence** split into observed, predicted and simulated, each with its sample size.
+- **Serve.** Enter a diner token and get a first portion in scoops, with the likely range and the reason. The diner can always choose differently, and seconds are one tap.
+- **Return.** Record grams left and ask one question: *was that enough?* Grams come from a scale, or from a photo when there isn't one.
+- **Learn.** "Enough" means appetite was about this much. "Wanted more" means *at least* this much and can only raise an estimate. Unclear plates and leftovers caused by dislike or interruption are recorded but never lower anyone's estimate. The Learn page runs the real model three ways on the same empty plate so the difference is visible.
+- **Kitchen.** The estimates become how much to cook before service, how much to hold in reserve, when to start each batch and the modelled chance of running short. When stock or the refill station can't support the plan, it says *not feasible* and why. It never quietly lowers its own target.
+- **Evidence.** Observed, predicted and simulated results are kept apart, each with its sample size, and exportable.
 
-Diners are anonymous tokens. No names, faces, body data or health data. This is not a diet tool.
+Diners are anonymous tokens. No names, faces, calories or body data. Suggestions never override a request.
 
-## What makes it different
+## What is different
 
-- **Censored learning.** The model is a Bayesian lognormal with interval and right-censored likelihoods. The Learn page runs the real model three ways on the same empty plate so you can see the difference.
-- **Seconds are part of the design**, not an afterthought. The policy minimises expected leftover plus an explicit cost for a trip back, and the kitchen plan forecasts what will be *served*, including refills and scoop rounding.
-- **Honest accounting.** A missing return is missing, not zero waste. Simulated, imported and measured records are stored with their provenance and never mixed. A simple baseline that wins is shown as winning.
+1. **Censored learning.** A Bayesian lognormal model with interval and right-censored likelihoods, so "wanted more" is treated as a lower bound rather than a target.
+2. **Seconds are designed in.** The portion policy trades leftover against trips back, and the kitchen plan forecasts what will be *served*, including refills and scoop rounding.
+3. **Photo estimate without a model download.** Compare the returned plate with an empty-plate photo, fit grams on a few weighed plates, and carry the estimate's own uncertainty into the model. Photos are analysed in the browser and never uploaded.
+4. **Honest accounting.** A missing return is missing, not zero waste. Measured, simulated and imported records never mix. Nothing is claimed as "meals saved" or CO₂.
 
 ## Where AWS fits
 
-Everything runs on AWS, defined in one SAM template (`infra/template.yaml`).
+Defined in one SAM template (`infra/template.yaml`) and deployed to `ap-south-1`.
 
 | Service | Role |
 |---|---|
-| **AWS Lambda** (Python 3.13) | Runs the model, the serving policy and the Monte Carlo kitchen planner on every request |
-| **Amazon API Gateway** (HTTP API) | HTTPS front door for the API, with throttling and a JWT authorizer on pilot routes |
-| **Amazon DynamoDB** | Durable pilot records. Events are immutable; one transaction per write enforces idempotency and a per-plate counter so two stations cannot corrupt a plate |
-| **Amazon Cognito** | Operator sign-in for the pilot workspace. No public sign-up |
-| **Amazon S3 + CloudFront** | In the template (private bucket, Origin Access Control). **Not active in the live deployment:** CloudFront needs account verification on a new AWS account, so the Lambda serves the web app through API Gateway instead |
-| **CloudWatch Logs** | Structured request logs without diner payloads |
-| **AWS SAM / CloudFormation** | Repeatable deployment; the Lambda package is built without Docker |
+| **AWS Lambda** | Runs the demand model, serving policy and Monte Carlo kitchen planner on every request, and serves the web app |
+| **Amazon API Gateway** | HTTPS front door with throttling and a JWT authorizer on pilot routes |
+| **Amazon DynamoDB** | Durable pilot records. Immutable events; each write is one transaction enforcing idempotency and a per-plate counter, so two stations can't corrupt a plate |
+| **Amazon Cognito** | Operator sign-in for the pilot workspace; no public sign-up |
+| **Amazon CloudWatch** | Request logs without diner data |
+| **CloudFormation / SAM** | Repeatable deployment, built without Docker |
 
-It is serverless and scales to zero. Estimated cost for a week of demo traffic is under one US dollar; see `DEPLOYMENT.md`.
+The template also defines S3 and CloudFront, but new AWS accounts must be verified before CloudFront can be created, so the live deployment serves the web app from Lambda instead. The video footer shows the Lambda function and region on every screen.
 
-## Evidence
+## Evidence, and what it does not show
 
-**Observed (field) evidence: none.** No real kitchen has been measured. The pilot workspace starts empty, and `PILOT_PROTOCOL.md` describes how to collect real data.
+**No real kitchen has been measured.** The pilot workspace starts empty, and `PILOT_PROTOCOL.md` describes how to collect real data. Everything below comes from a labelled simulator with nine scenarios and eight seeds, comparing policies on identical diners and appetites (`EVALUATION.md`).
 
-**Simulated evidence.** A labelled simulator compares serving policies on identical diners, attendance and appetites (nine scenarios, eight seeds, metrics on the final third of meals). Full tables with intervals are in `EVALUATION.md`; the app's Evidence page reads the same file.
+| Baseline scenario | Food left per plate | Diners left wanting more |
+|---|---|---|
+| Usual fixed portion, 3 scoops | 28.9 g | 19.8% |
+| Smaller fixed portion + seconds | 12.4 g | 35.8% |
+| **ProofPlate** | 29.5 g | **10.8%** |
 
-In the baseline scenario:
+- At the default setting ProofPlate does **not** leave less on the plate than the usual portion. It leaves about the same and roughly halves the diners left wanting more.
+- Like for like: a fixed portion that leaves as few diners wanting more as ProofPlate (10.8%) would leave about 55 g per plate, against ProofPlate's 29.5 g. That figure is interpolated.
+- When only half of diners walk back for seconds, a personal average without the censoring logic leaves less food (13.6 g) but 47.9% of diners wanting more, worse than the usual portion's 39.6%. ProofPlate leaves 25.1 g with 28.4%.
 
-| Policy | Food left per plate | Diners left wanting more | Trips for seconds per plate |
-|---|---|---|---|
-| Usual fixed portion, 3 scoops | 28.9 g | 19.8% | 1.08 |
-| Smaller fixed portion, 2 scoops, plus seconds | 12.4 g | 35.8% | 1.91 |
-| ProofPlate, default setting | 29.5 g | 10.8% | 0.66 |
-
-What this says, and does not say:
-
-- At its default setting ProofPlate did **not** leave less on the plate than the usual portion. It left about the same, and roughly halved the diners left wanting more.
-- Serving everyone less cuts plate waste the most, and leaves the most diners hungry.
-- Like for like: for a fixed portion to leave as few diners wanting more as ProofPlate did (10.8%), it left about 55 g per plate, against ProofPlate's 29.5 g. That figure is interpolated between two fixed portions.
-- When only half of diners walk back for seconds, a personal moving average without the censoring logic left less food (13.6 g) but 47.9% of diners wanting more, worse than the usual portion's 39.6%. ProofPlate left 25.1 g with 28.4%.
-
-These are properties of a simulator built on stated assumptions. They are not measured savings.
+These are properties of a simulator built on stated assumptions, not measured savings. The photo estimate has been checked on generated images only.
 
 ## Verification
 
-- 80 automated Python tests and 8 photo-estimate unit tests pass: numerics against SciPy, likelihoods against analytic values, censoring behaviour, policy and planner constraints, mass balance, idempotency, corrections, tenant isolation, demo/pilot isolation, and one storage contract run against in-memory, SQLite and DynamoDB (moto) adapters.
-- A scripted Chrome flow checks the photo estimate against generated truth, and records a return from it.
-- A scripted Chrome walkthrough covers serve → seconds → return → changed suggestion → kitchen recompute → infeasible plan → evidence export, at desktop and phone widths.
-- Deployed to AWS ap-south-1 and checked from outside: public demo walkthrough and a Cognito-signed-in pilot flow against DynamoDB, plus tenant-isolation and auth-failure checks. Results, and what was not verified, are in `DEPLOYMENT.md`.
+- 80 Python tests and 8 photo-estimate unit tests pass, covering likelihoods against analytic values, censoring behaviour, mass balance, idempotency, corrections, tenant isolation, and one storage contract run on memory, SQLite and DynamoDB adapters.
+- Scripted Chrome flows pass locally and against the live AWS URL: the public demo at desktop and phone widths, a Cognito-signed-in pilot flow against DynamoDB, and the photo estimate against generated truth.
+- Results and what was not verified are in `DEPLOYMENT.md`.
 
 ## Limitations
 
-- The photo estimate is classical image arithmetic and has only been checked on generated images. It needs a fixed camera and a plate that contrasts with the food, and has not been validated on real photographs.
-- No field data. Effect in a real mess is unproven.
-- One food at a time, weighed separately. Mixed plates are out of scope.
-- Satisfaction is self-reported and can be wrong.
-- The simulator's behaviour model (who walks back for seconds, who answers the question) is an assumption.
-- Offline entry is by paper sheet and CSV import, not an offline app.
+- No field data, so effect in a real mess is unproven.
+- The photo estimate needs a fixed camera and a plate that contrasts with the food, and has not been validated on real photographs.
+- Satisfaction is self-reported; one food is weighed at a time.
+- The simulator's behaviour model is an assumption.
 
-## AI tools used
+## Next
 
-- **Claude Code (Anthropic)** — used to implement the application, tests, infrastructure and documentation from the team's specification, during the event.
-- *(List any other AI tool the team used, for example to draft the specification.)*
+Run the pilot in `PILOT_PROTOCOL.md` with one hostel kitchen and one dish, calibrate on real plates, and report observed results with denominators.
 
-## Third-party work
+## How it was built, and AI tools used
 
-Open-source libraries only, listed with licenses in `README.md`. All graphics are original SVG. No external datasets.
+Disclosed as the rules require.
+
+- **Claude Code (Anthropic)** was used during the event to write most of the implementation, tests, infrastructure template and documentation, working from the team's written specification.
+- An AI assistant was also used to help draft that specification. *(Name it here.)*
+- The team chose the problem and the approach, set the honesty and privacy constraints the product follows, directed and reviewed the work, and ran the deployment on its own AWS account. *(Edit to say exactly what each member did.)*
+
+Open-source libraries only (FastAPI, Pydantic, Mangum, NumPy, React, Vite, IBM Plex fonts under the SIL OFL), listed in `README.md`. Plate graphics are original SVG, and the demo photos are rendered by `scripts/make_sample_photos.py`. No external datasets.
