@@ -5,7 +5,7 @@ Updated 11 October 2026, evening IST. Three statuses are kept apart on purpose.
 | | Status |
 |---|---|
 | Software implemented | **Yes**, tested locally (details below) |
-| Cloud deployment verified | **No.** Waiting on an AWS session (`aws login`) on the build machine |
+| Cloud deployment verified | **Yes, without CloudFront.** https://imh92ymqaa.execute-api.ap-south-1.amazonaws.com (ap-south-1). Details and gaps in `DEPLOYMENT.md` |
 | Field evidence collected | **No.** Nothing has been measured in a real kitchen |
 
 ## Built
@@ -62,7 +62,7 @@ Photo attachments, camera plate matching, connected scale, bilingual text, offli
 
 ## Waiting on people
 
-1. `aws login` on the build machine, then `scripts\deploy.ps1`.
+1. ~~`aws login`, then `scripts\deploy.ps1`.~~ Done. Remaining: AWS Support verification of the account so CloudFront can be added.
 2. ~~A public GitHub repository URL to push to.~~ Done: pushed to https://github.com/alabhya-git/aws_env.
 3. Narrated demo recording, YouTube upload and form submission.
 4. The team's list of any other AI tools used, for `SUBMISSION.md`.

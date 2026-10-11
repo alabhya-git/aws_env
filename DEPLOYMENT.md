@@ -2,14 +2,40 @@
 
 ## Status
 
-**Not deployed yet.** The application, the Lambda package and the infrastructure template are built and tested locally. Deployment is waiting on one external step: an AWS session on the build machine (`aws login`). No URL exists until that is done; this section is replaced with real values by the first successful `scripts\deploy.ps1` run.
+**Deployed and verified on AWS, without CloudFront.**
+
+| | |
+|---|---|
+| App and API | https://imh92ymqaa.execute-api.ap-south-1.amazonaws.com |
+| Region | ap-south-1 (Mumbai) |
+| Stack | `proofplate-prod` (CloudFormation, SAM) |
+| Deployed revision | `6c03208` (see `/api/health`) |
+| Deployed | 11 October 2026, about 22:28 IST |
+
+**Why no CloudFront.** The first deploy failed at the CloudFront distribution: *"Your account must be verified before you can add new CloudFront resources"* (AWS Support verification is needed on a new account). The stack was rolled back and redeployed with `-NoCloudFront`. The web app is therefore served by the Lambda through the API Gateway HTTPS URL, which is a supported fallback in the template. The S3 bucket and Origin Access Control from the full design are not used in this deployment, and the web bucket created by the stack is empty. Once the account is verified, `scripts\deploy.ps1` without `-NoCloudFront` adds CloudFront and publishes the app to S3.
+
+### What was verified on the live deployment
 
 | Check | Result |
 |---|---|
-| Lambda package builds without Docker (Linux wheels, python3.13, x86_64) | Done locally: 59 MB unzipped |
-| Stack deployed | Pending AWS sign-in |
-| HTTPS app URL | Pending |
-| Live smoke test, deep links, model update, persistence across redeploy, tenant isolation | Pending |
+| `GET /api/health` | `ok`, store `dynamo`, region `ap-south-1`, Lambda function name returned |
+| Deep link `/demo/kitchen` | 200, HTML app shell |
+| Missing asset `/assets/nope.js` | 404, JSON (not the app shell) |
+| Pilot API without a token | 401 |
+| Pilot API with the local-dev header `x-dev-user` | 401 (development sign-in is not available on AWS) |
+| Public demo browser walkthrough (desktop 1366 px and phone 390 px) | passed against the live URL |
+| Pilot browser flow with real Cognito sign-in: calibrate, serve, seconds, return, changed suggestion, reload, correction, evidence, sign out | passed; records written to and read from DynamoDB |
+| Tenant isolation: operator of a second site | sees 0 foods, services and diners; a forged `site_id` in the body is rejected with 422 |
+| Warm latency from the build machine, Mumbai region, including network | demo bootstrap about 0.25 s; kitchen plan about 1.1 s |
+| Test data | a throwaway operator and records were used, then deleted; the table and user pool are empty |
+
+### Not verified
+
+- CloudFront, S3 publishing and the deep-link rewrite function (not created).
+- Cold-start time (not measured separately).
+- Records surviving a redeploy: the table has a Retain policy and was not replaced by the second deploy, but a redeploy with data in it was not tested.
+- Deployment from a second AWS account.
+- The deployment ran as the account's root user; use a least-privilege IAM user for routine redeploys.
 
 ## What gets created
 

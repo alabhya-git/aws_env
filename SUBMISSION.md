@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| Live app | see `DEPLOYMENT.md` |
+| Live app | https://imh92ymqaa.execute-api.ap-south-1.amazonaws.com |
 | Repository | https://github.com/alabhya-git/aws_env |
 | Demo video | *(add the YouTube URL)* |
 | Team | *(add names)* |
@@ -45,7 +45,7 @@ Everything runs on AWS, defined in one SAM template (`infra/template.yaml`).
 | **Amazon API Gateway** (HTTP API) | HTTPS front door for the API, with throttling and a JWT authorizer on pilot routes |
 | **Amazon DynamoDB** | Durable pilot records. Events are immutable; one transaction per write enforces idempotency and a per-plate counter so two stations cannot corrupt a plate |
 | **Amazon Cognito** | Operator sign-in for the pilot workspace. No public sign-up |
-| **Amazon S3 + CloudFront** | Private bucket behind Origin Access Control serves the web app; CloudFront routes `/api/*` to the API so everything is one origin |
+| **Amazon S3 + CloudFront** | In the template (private bucket, Origin Access Control). **Not active in the live deployment:** CloudFront needs account verification on a new AWS account, so the Lambda serves the web app through API Gateway instead |
 | **CloudWatch Logs** | Structured request logs without diner payloads |
 | **AWS SAM / CloudFormation** | Repeatable deployment; the Lambda package is built without Docker |
 
@@ -78,7 +78,7 @@ These are properties of a simulator built on stated assumptions. They are not me
 
 - 79 automated tests pass: numerics against SciPy, likelihoods against analytic values, censoring behaviour, policy and planner constraints, mass balance, idempotency, corrections, tenant isolation, demo/pilot isolation, and one storage contract run against in-memory, SQLite and DynamoDB (moto) adapters.
 - A scripted Chrome walkthrough covers serve → seconds → return → changed suggestion → kitchen recompute → infeasible plan → evidence export, at desktop and phone widths.
-- Deployment checks are recorded in `DEPLOYMENT.md`.
+- Deployed to AWS ap-south-1 and checked from outside: public demo walkthrough and a Cognito-signed-in pilot flow against DynamoDB, plus tenant-isolation and auth-failure checks. Results, and what was not verified, are in `DEPLOYMENT.md`.
 
 ## Limitations
 

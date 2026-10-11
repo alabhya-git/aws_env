@@ -23,7 +23,7 @@ A system that treats every empty plate as "that amount was right" keeps under-se
 | | Status |
 |---|---|
 | Software | Implemented and tested. See "Verification" below |
-| AWS deployment | See `DEPLOYMENT.md` for the live URL and what was verified |
+| AWS deployment | Live at https://imh92ymqaa.execute-api.ap-south-1.amazonaws.com (Lambda, API Gateway, DynamoDB, Cognito; CloudFront pending account verification). See `DEPLOYMENT.md` |
 | Field evidence | **None collected.** No real kitchen has been measured. Every result in this repository is simulated and labelled so |
 
 ## What it does
