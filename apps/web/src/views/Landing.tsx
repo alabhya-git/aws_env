@@ -9,72 +9,69 @@ export function Landing({ cfg }: { cfg: RuntimeConfig }) {
         <div className="topbar-in">
           <Link to="/" className="brand"><Logo /> ProofPlate</Link>
           <span className="spacer" />
-          <Link to="/signin" className="btn sm">Pilot sign-in</Link>
-          <Link to="/demo/serve" className="btn sm primary">Try the demo</Link>
+          <div className="row">
+            <Link to="/signin" className="btn sm">Pilot sign-in</Link>
+            <Link to="/demo/serve" className="btn sm primary">Open the demo</Link>
+          </div>
         </div>
       </header>
       <main className="page">
         <section className="hero">
           <div>
-            <h3>For college mess kitchens</h3>
-            <h1 style={{ marginTop: 10 }}>Serve a better first portion. Keep seconds easy. Show what changed.</h1>
+            <h1>Serve a better first portion. Keep seconds easy. Show what changed.</h1>
             <p className="lede">
-              ProofPlate learns how much of each dish a diner usually chooses to eat, suggests the first portion, and turns
-              what came back on the plates into the kitchen's next preparation plan.
+              For the person at the serving counter and the kitchen manager behind them. ProofPlate learns how much of a dish each
+              diner chooses to eat, suggests the first portion, and turns what comes back on the plates into the next meal's plan.
             </p>
             <div className="row cta">
-              <Link to="/demo/serve" className="btn big primary">Try the demo</Link>
+              <Link to="/demo/serve" className="btn big primary">Serve a plate in the demo</Link>
               <Link to="/signin" className="btn big">Pilot workspace</Link>
             </div>
             <p className="small muted" style={{ marginTop: 12 }}>
-              The demo runs on generated data, clearly labelled. The pilot workspace starts empty and holds only what your operators record.
+              The demo runs on generated data and says so on every screen. The pilot workspace starts empty and holds only what your operators record.
             </p>
           </div>
-          <div className="card">
-            <h3>Same empty plate, different evidence</h3>
-            <div className="duo" style={{ marginTop: 14 }}>
-              <div className="card flat tight">
-                <Plate scoops={3} size={130} tone="ghost" label="An empty plate after three scoops" />
-                <p style={{ fontWeight: 650, marginTop: 6 }}>“That was enough.”</p>
+          <div className="stack">
+            <h3>The same empty plate, read two ways</h3>
+            <div className="duo">
+              <div>
+                <Plate scoops={3} size={118} tone="ghost" label="An empty plate after three scoops" />
+                <p style={{ fontWeight: 600, marginTop: 8 }}>“That was enough.”</p>
                 <p className="small muted">Appetite was about three scoops.</p>
               </div>
-              <div className="card flat tight">
-                <Plate scoops={3} size={130} tone="ghost" label="The same empty plate after three scoops" />
-                <p style={{ fontWeight: 650, marginTop: 6 }}>“I wanted more.”</p>
+              <div>
+                <Plate scoops={3} size={118} tone="ghost" label="The same empty plate after three scoops" />
+                <p style={{ fontWeight: 600, marginTop: 8 }}>“I wanted more.”</p>
                 <p className="small muted">Appetite was at least three scoops.</p>
               </div>
             </div>
-            <p className="small" style={{ marginTop: 14 }}>
-              A scale cannot tell these apart. A system that treats both as “three scoops is right” keeps under-serving the
-              hungry diner. ProofPlate records the difference and learns from each one correctly.
+            <p className="small">
+              A scale cannot tell these apart, and a system that treats both as “three scoops was right” keeps under-serving the
+              hungry diner. ProofPlate records which it was and learns from each correctly.
             </p>
           </div>
         </section>
 
-        <section className="card" style={{ marginTop: 22 }}>
-          <h3>The loop</h3>
-          <ol className="steps" style={{ padding: 0, margin: "14px 0 0" }}>
-            <li><strong>Calibrate the scoop.</strong><br /><span className="muted">Weigh about twenty scoops of the cooked dish once per recipe.</span></li>
-            <li><strong>Suggest a first portion.</strong><br /><span className="muted">With the likely range and the reason. The diner can always choose differently.</span></li>
-            <li><strong>Record seconds and the return.</strong><br /><span className="muted">Grams left, “was that enough?”, and why food was left.</span></li>
-            <li><strong>Update the estimate.</strong><br /><span className="muted">“Wanted more” is a lower bound, not a target. Unclear plates are not used.</span></li>
-            <li><strong>Plan the kitchen.</strong><br /><span className="muted">Initial batch, reserve, and a visible warning when a plan cannot work.</span></li>
+        <section className="card" style={{ marginTop: 40 }}>
+          <h2>How a plate becomes the next suggestion</h2>
+          <ol className="loop" style={{ marginTop: 12 }}>
+            <li><b>1</b><span><strong>Calibrate the scoop.</strong> <span className="muted">Weigh about twenty scoops of the cooked dish, once per recipe.</span></span></li>
+            <li><b>2</b><span><strong>Suggest a first portion.</strong> <span className="muted">With the likely range and the reason. The diner can always choose differently.</span></span></li>
+            <li><b>3</b><span><strong>Record seconds and the return.</strong> <span className="muted">Grams left, from the scale or from a photo, and “was that enough?”.</span></span></li>
+            <li><b>4</b><span><strong>Update the estimate.</strong> <span className="muted">“Wanted more” is a lower bound, not a target. Unclear plates are not used.</span></span></li>
+            <li><b>5</b><span><strong>Plan the kitchen.</strong> <span className="muted">Initial batch, reserve, and a plain warning when a plan cannot work.</span></span></li>
           </ol>
         </section>
 
-        <section className="grid cols-3" style={{ marginTop: 18 }}>
-          <div className="card">
-            <h3>What it is not</h3>
-            <p style={{ marginTop: 8 }}>Not a diet, calorie or health tool. No names, faces or body data. A suggestion never overrides what a diner asks for.</p>
-          </div>
-          <div className="card">
-            <h3>Honest numbers</h3>
-            <p style={{ marginTop: 8 }}>Every figure is tagged observed, predicted or simulated, with its sample size. A missing return counts as missing, not as zero waste.</p>
-          </div>
-          <div className="card">
-            <h3>Runs on AWS</h3>
-            <p style={{ marginTop: 8 }}>CloudFront and S3 serve this page. API Gateway and Lambda run the model. DynamoDB keeps pilot records. Cognito signs operators in.</p>
-          </div>
+        <section className="card" style={{ marginTop: 40 }}>
+          <h2>Limits worth knowing before you rely on it</h2>
+          <dl className="facts" style={{ marginTop: 12 }}>
+            <dt>Not a health tool</dt><dd>No names, faces, calories or body data. A suggestion never overrides what a diner asks for.</dd>
+            <dt>Numbers are labelled</dt><dd>Every figure is observed, predicted or simulated, with its sample size. A missing return is missing, not zero waste.</dd>
+            <dt>Photos stay on the device</dt><dd>The photo estimate runs in the browser; only the estimated grams and its uncertainty are saved.</dd>
+            <dt>No field results yet</dt><dd>Nothing here has been measured in a real kitchen. Simulated comparisons are not savings.</dd>
+            <dt>Runs on AWS</dt><dd>Lambda runs the model, API Gateway fronts it, DynamoDB keeps pilot records and Cognito signs operators in.</dd>
+          </dl>
         </section>
       </main>
       <Footer cfg={cfg} />

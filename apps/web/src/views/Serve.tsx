@@ -4,16 +4,24 @@ import { Link, useWs } from "../App";
 import { Plate } from "../Plate";
 import { BASIS, CLASS_LABEL, grams, istTime, LEFTOVER_REASONS, REASONS, SATISFACTION, scoopsText, SECONDS_STATUS } from "../text";
 import { ErrorNote, Field, Loading, Stepper, useToast } from "../ui";
+import { PhotoMeter } from "./PhotoMeter";
 
 type EventArgs = OpArgs["record_event"];
 type EventFields = Omit<EventArgs, "event_id" | "session_id" | "diner_token" | "food_id">;
 
 export function SessionPicker() {
   const ws = useWs();
+  const [open, setOpen] = useState(false);
+  const foodNow = ws.boot.foods.find((f) => f.id === ws.foodId);
   // only foods on this service's menu can be served in it
   const menu = ws.session ? ws.boot.foods.filter((f) => ws.session.food_ids.includes(f.id)) : ws.boot.foods;
   return (
-    <div className="row">
+    <div className={`ctx${open ? " open" : ""}`}>
+      <button type="button" className="btn sm ctx-summary" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        {ws.session ? `${ws.session.service_date} · ${ws.session.name}` : "No service"} · {foodNow?.name || "No food"}
+        {ws.calibration ? ` · ${ws.calibration.mean_g} g/scoop` : " · not calibrated"} · {open ? "close" : "change"}
+      </button>
+      <div className="row ctx-fields">
       <Field label="Meal service">
         <select className="input" value={ws.sessionId || ""} onChange={(e) => ws.setSessionId(e.target.value)}>
           {ws.boot.sessions.map((s) => (
@@ -37,6 +45,7 @@ export function SessionPicker() {
         ) : (
           <span className="chip warn" style={{ minHeight: 44 }}>Not calibrated</span>
         )}
+      </div>
       </div>
     </div>
   );
@@ -69,6 +78,8 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
   const [satisfaction, setSatisfaction] = useState<EventArgs["satisfaction"]>(correcting ? plate.satisfaction : null);
   const [reason, setReason] = useState<NonNullable<EventArgs["leftover_reason"]>>(correcting ? plate.leftover_reason || "none" : "none");
   const [seconds, setSeconds] = useState<NonNullable<EventArgs["seconds_status"]>>(plate.seconds_g?.length ? "served" : "not_requested");
+  const [photoSd, setPhotoSd] = useState<number | null>(null);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const [losses, setLosses] = useState("");
   const [shared, setShared] = useState(false);
   const g = returned === "" ? null : Number(returned);
@@ -78,6 +89,7 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
     if (!valid) return;
     onSubmit({
       type: "return", grams: g, measurement, satisfaction,
+      ...(measurement === "photo_estimate" && photoSd ? { photo_sd_g: photoSd } : {}),
       leftover_reason: g! > 0 ? reason : "none",
       seconds_status: seconds, losses_g: losses ? Number(losses) : 0, transfer_unknown: shared,
     });
@@ -87,7 +99,7 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
       <h3>{correcting ? "Correct the return" : "Plate came back"}</h3>
       <div className="row top">
         <Field label="Edible food left (grams)" hint="Weigh the plate, subtract the empty plate.">
-          <input className="input big num" inputMode="numeric" pattern="[0-9]*" value={returned} onChange={(e) => setReturned(e.target.value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="0" style={{ maxWidth: 170 }} aria-label="Edible food left in grams" />
+          <input className="input big num" inputMode="numeric" pattern="[0-9]*" value={returned} onChange={(e) => { setReturned(e.target.value.replace(/[^0-9]/g, "").slice(0, 4)); if (measurement === "photo_estimate") { setMeasurement("weighed"); setPhotoSd(null); } }} placeholder="0" style={{ maxWidth: 170 }} aria-label="Edible food left in grams" />
         </Field>
         <div className="field">
           <span>Quick</span>
@@ -101,9 +113,18 @@ function ReturnForm({ plate, scoopG, busy, onSubmit, onCancel, correcting }: { p
           <span>How measured</span>
           <div className="chips">
             <button type="button" aria-pressed={measurement === "weighed"} onClick={() => setMeasurement("weighed")}>Weighed</button>
-            <button type="button" aria-pressed={measurement === "scoop_estimate"} onClick={() => setMeasurement("scoop_estimate")}>Estimated by eye</button>
+            <button type="button" aria-pressed={measurement === "scoop_estimate"} onClick={() => { setMeasurement("scoop_estimate"); setPhotoSd(null); }}>Estimated by eye</button>
+            {measurement === "photo_estimate" ? <button type="button" aria-pressed>Photo estimate ± {photoSd} g</button> : null}
           </div>
         </div>
+      </div>
+      <div className="photo-box">
+        <button type="button" className="btn sm" aria-expanded={photoOpen} onClick={() => setPhotoOpen((o) => !o)}>
+          {photoOpen ? "Hide photo estimate" : "Estimate leftovers from a photo"}
+        </button>
+        {photoOpen ? (
+          <PhotoMeter onUse={(grams, sd) => { setReturned(String(grams)); setMeasurement("photo_estimate"); setPhotoSd(sd); setPhotoOpen(false); }} />
+        ) : null}
       </div>
       <div className="field">
         <span>Ask the diner: was that enough?</span>
@@ -251,7 +272,7 @@ export function Serve() {
       </div>
       <div className="serve">
         <div className="stack">
-          <form className="card row" onSubmit={(e) => { e.preventDefault(); load(input.trim()); }}>
+          <form className="row" onSubmit={(e) => { e.preventDefault(); load(input.trim()); }}>
             <Field label="Diner token" hint="Scan or type the token on the diner's card. No names.">
               <input className="input big" value={input} onChange={(e) => setInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_.:\-]/g, "").slice(0, 24))} placeholder="T-104" autoFocus autoComplete="off" aria-label="Diner token" style={{ maxWidth: 260 }} />
             </Field>
@@ -287,7 +308,7 @@ export function Serve() {
           {busy && !state ? <Loading label="Looking up…" /> : null}
 
           {state && rec ? (
-            <div className="card stack l">
+            <div className="panel stack l">
               <div className="row between">
                 <h2>{state.diner.token} · {state.food.name}</h2>
                 <div className="row">
@@ -417,14 +438,14 @@ export function Serve() {
           ) : null}
 
           {!state && !notFound && !busy ? (
-            <div className="card empty">
+            <div className="empty">
               <Plate scoops={0} size={120} tone="ghost" label="Empty plate" />
               <p style={{ marginTop: 8 }}>Enter a diner token to see the suggested first portion.</p>
             </div>
           ) : null}
         </div>
 
-        <aside className="card tight">
+        <aside className="card">
           <div className="row between"><h3>This service</h3>{log ? <span className="small muted">{log.total} plates</span> : null}</div>
           {!log ? <Loading label="Loading…" /> : log.plates.length === 0 ? (
             <p className="empty small">Nothing served yet in this service.</p>
@@ -432,7 +453,7 @@ export function Serve() {
             <div className="loglist" style={{ marginTop: 6 }}>
               {log.plates.slice(0, 14).map((p: any) => (
                 <button key={p.diner_token + p.food_id} onClick={() => { setInput(p.diner_token); load(p.diner_token); }}>
-                  <span><strong>{p.diner_token}</strong> <span className="muted small num">{p.status === "declined" ? "" : grams(p.total_served_g)}</span></span>
+                  <span className="who"><span className="glyph"><Plate size={28} tone="ink" scoops={p.total_served_g / scoopG} returnedShare={p.returned_g != null ? p.returned_g / Math.max(p.total_served_g, 1) : null} label={`${p.diner_token} plate`} /></span><span><strong>{p.diner_token}</strong> <span className="muted small num">{p.status === "declined" ? "" : grams(p.total_served_g)}</span></span></span>
                   <span className={`chip ${CLASS_LABEL[p.classification]?.tone || "skip"}`}>{p.status === "open" ? "plate out" : p.status === "declined" ? "declined" : `${grams(p.returned_g)} back`}</span>
                 </button>
               ))}

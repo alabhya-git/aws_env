@@ -165,6 +165,23 @@ def test_requested_portion_and_opt_out(setup):
     call("update_diner", {"token": s["token"], "personalization_opt_out": False})
 
 
+def test_photo_estimate_is_labelled_and_widens_the_interval(setup):
+    s = setup
+    out = {}
+    for tok, meas, extra in [("T-ph-w", "weighed", {}), ("T-ph-p", "photo_estimate", {"photo_sd_g": 25})]:
+        call("create_diner", {"token": tok})
+        call("record_event", ev(s, "serve_initial", token=tok, scoops=3))
+        r = call("record_event", ev(s, "return", token=tok, grams=40, measurement=meas, satisfaction="enough",
+                                    leftover_reason="enough_food", **extra))
+        out[meas] = r["participation"]
+        assert r["participation"]["return_measurement"] == meas
+    assert out["photo_estimate"]["tolerance_g"] > out["weighed"]["tolerance_g"] + 10
+    assert out["photo_estimate"]["consumed_g"] == out["weighed"]["consumed_g"]
+    g = call("evidence", {})["groups"][0]
+    assert g["return_methods"].get("photo_estimate", 0) >= 1 and g["return_methods"].get("weighed", 0) >= 1
+    assert client.post("/api/pilot/record_event", json={"args": ev(s, "return", token="T-ph-p", grams=5, photo_sd_g=0)}, headers=ALICE).status_code == 422
+
+
 def test_serving_style_setting_changes_the_policy_and_needs_a_manager(setup):
     s = setup
     call("create_diner", {"token": "T-style"})

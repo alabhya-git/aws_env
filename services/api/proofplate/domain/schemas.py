@@ -7,7 +7,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Origin = Literal["measured", "simulated", "imported"]
-Measurement = Literal["weighed", "scoop_estimate", "generated"]
+Measurement = Literal["weighed", "scoop_estimate", "photo_estimate", "generated"]
 Satisfaction = Literal["enough", "wanted_more", "unsure"]
 LeftoverReason = Literal["none", "enough_food", "dislike", "interrupted", "shared", "unknown"]
 SecondsStatus = Literal["not_requested", "served", "unavailable", "delayed", "declined"]
@@ -40,6 +40,7 @@ class EventIn(Strict):
     leftover_reason: Optional[LeftoverReason] = None
     seconds_status: Optional[SecondsStatus] = None
     seconds_wait_min: Optional[int] = Field(default=None, ge=0, le=240)
+    photo_sd_g: Optional[int] = Field(default=None, ge=1, le=1000)  # stated uncertainty of a photo estimate
     losses_g: int = Field(default=0, ge=0, le=MAX_G)
     incoming_transfer_g: int = Field(default=0, ge=0, le=MAX_G)
     transfer_unknown: bool = False

@@ -52,6 +52,7 @@ def project(events: Iterable[dict]) -> dict:
         "origin": evs[0]["origin"] if evs else None, "measurement_status": evs[0].get("measurement_status") if evs else None,
         "serve_measurement": None, "return_measurement": None, "scoop_g": None, "scoop_sd_g": None,
         "calibration_version": None, "scale_resolution_g": 1,
+        "return_sd_g": None,
         "initial_event_id": initial[0]["event_id"] if initial else None,
         "return_event_id": returns[0]["event_id"] if returns else None,
     }
@@ -80,6 +81,7 @@ def project(events: Iterable[dict]) -> dict:
             satisfaction=r.get("satisfaction") or "unsure", leftover_reason=r.get("leftover_reason") or "none",
             seconds_status=r.get("seconds_status") or ("served" if seconds else "not_requested"),
             seconds_wait_min=r.get("seconds_wait_min"), return_measurement=r.get("measurement"),
+            return_sd_g=r.get("photo_sd_g"),
         )
         if not p["transfer_unknown"]:
             p["consumed_g"] = p["total_served_g"] + p["incoming_transfer_g"] - p["returned_g"] - p["losses_g"]
@@ -159,7 +161,13 @@ def tolerance_g(p: dict) -> float:
         scoop = float(p.get("scoop_g") or 60.0)
         n_scoops = max(p["total_served_g"] / scoop, 0.5)
         serve_u = sd * math.sqrt(n_scoops)
-    ret_u = res if p.get("return_measurement") == "weighed" else 8.0
+    rm = p.get("return_measurement")
+    if rm == "weighed":
+        ret_u = res
+    elif rm == "photo_estimate":
+        ret_u = float(p.get("return_sd_g") or 15.0)  # a photo estimate carries its own stated uncertainty
+    else:
+        ret_u = 8.0
     meas = math.hypot(serve_u, ret_u)
     return max(4.0, 1.5 * meas) + 0.03 * max(p.get("consumed_g") or 0, 0)
 

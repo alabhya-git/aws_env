@@ -1,0 +1,59 @@
+{
+ "status": "GENERATED",
+ "note": "Rendered demonstration images, not photographs of real food. Mass is a function of rendered area chosen by the generator.",
+ "seed": 20261011,
+ "reference": "empty.jpg",
+ "calibration": [
+  {
+   "file": "plate-6g.jpg",
+   "grams": 6,
+   "rendered_share": 0.0514
+  },
+  {
+   "file": "plate-16g.jpg",
+   "grams": 16,
+   "rendered_share": 0.1119
+  },
+  {
+   "file": "plate-29g.jpg",
+   "grams": 29,
+   "rendered_share": 0.1713
+  },
+  {
+   "file": "plate-37g.jpg",
+   "grams": 37,
+   "rendered_share": 0.2064
+  },
+  {
+   "file": "plate-59g.jpg",
+   "grams": 59,
+   "rendered_share": 0.291
+  }
+ ],
+ "tests": [
+  {
+   "file": "return-1.jpg",
+   "label": "Empty plate",
+   "true_grams": 0,
+   "rendered_share": 0.0
+  },
+  {
+   "file": "return-2.jpg",
+   "label": "A little left",
+   "true_grams": 10,
+   "rendered_share": 0.0814
+  },
+  {
+   "file": "return-3.jpg",
+   "label": "About a scoop left",
+   "true_grams": 23,
+   "rendered_share": 0.1439
+  },
+  {
+   "file": "return-4.jpg",
+   "label": "A lot left",
+   "true_grams": 37,
+   "rendered_share": 0.2071
+  }
+ ]
+}

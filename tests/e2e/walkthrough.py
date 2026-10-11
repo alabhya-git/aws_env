@@ -49,7 +49,7 @@ def desktop(page: Page) -> None:
     expect(page.get_by_role("heading", level=1)).to_contain_text("Serve a better first portion")
     beat(page, 2500)
     shot(page, "01-landing")
-    page.get_by_role("link", name="Try the demo").first.click()
+    page.get_by_role("link", name="Serve a plate in the demo").first.click()
 
     # ---- Serve: the diner who was served three scoops and left about one, six times
     expect(page.get_by_text("Demo · simulated data")).to_be_visible()

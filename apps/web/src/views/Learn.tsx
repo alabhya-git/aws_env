@@ -18,7 +18,7 @@ function WhatIf({ token, foodId, scoopG }: { token: string; foodId: string; scoo
   const q = useAsync(() => api("whatif", { token, food_id: foodId, plate_g: plateG, repeats }), [token, foodId, plateG, repeats]);
   const w = q.data;
   return (
-    <section className="card stack l">
+    <section className="panel stack l">
       <div className="row between top">
         <div>
           <h2>Same empty plate, different evidence</h2>
@@ -146,7 +146,7 @@ export function Learn() {
                 <div>
                   <h3>Where the next meal's appetite is likely to fall</h3>
                   <DensityChart title="Predictive distribution of the amount this diner would choose to eat" hiG={d.density.hi_g}
-                    series={[{ key: "now", label: "Current estimate", color: "#2f7d4f", bins: d.density.bins }]}
+                    series={[{ key: "now", label: "Current estimate", color: "#1f6b43", bins: d.density.bins }]}
                     markers={[{ g: d.recommendation.grams, label: `first portion ${d.recommendation.grams} g` }]} />
                   <p className="small muted" style={{ marginTop: 6 }}>Hover to read the chance of wanting more than any amount. The spread includes meal-to-meal variation, not only uncertainty about the average.</p>
                 </div>
@@ -163,7 +163,7 @@ export function Learn() {
                   <tbody>
                     {d.history.map((h: any, i: number) => (
                       <tr key={i}>
-                        <td className="num">{i + 1}</td>
+                        <td className="num"><span className="row" style={{ gap: 8, flexWrap: "nowrap" }}><Plate size={26} tone="ink" scoops={h.total_served_g / d.calibration.mean_g} returnedShare={h.returned_g != null ? h.returned_g / Math.max(h.total_served_g, 1) : null} label={`Plate ${i + 1}`} />{i + 1}</span></td>
                         <td>{h.service_date || "–"}</td>
                         <td className="r">{grams(h.total_served_g)}</td>
                         <td className="r">{grams(h.returned_g)}</td>

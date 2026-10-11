@@ -3,9 +3,9 @@
 import { MouseEvent, ReactNode, useRef, useState } from "react";
 import { CLASS_LABEL, grams, kg } from "./text";
 
-const INK = "#17201a";
-const AXIS = "#c3c2b7";
-const GRID = "#e1e0d9";
+const INK = "#16201a";
+const AXIS = "#b3b8ae";
+const GRID = "#dcdfd8";
 export const SERIES = ["#2a78d6", "#eb6834", "#1baf7a"];
 
 function useHover(width: number) {
@@ -166,9 +166,16 @@ export function CumulativeChart({ points, title }: { points: Array<{ minute: num
         <path d={step} fill="none" stroke={INK} strokeWidth="2" />
         <path d={line("p95_g")} fill="none" stroke={SERIES[0]} strokeWidth="2" strokeDasharray="5 4" />
         <path d={line("p50_g")} fill="none" stroke={SERIES[0]} strokeWidth="2" />
-        <text className="lab" x={W - R + 6} y={y(last.available_g) + 4}>cooked, ready</text>
-        <text className="lab" x={W - R + 6} y={Math.min(y(last.p95_g) + 4, y(last.available_g) + 18 > y(last.p95_g) + 4 ? y(last.available_g) + 18 : y(last.p95_g) + 4)}>needed, 95th</text>
-        <text className="lab" x={W - R + 6} y={Math.max(y(last.p50_g) + 4, y(last.p95_g) + 34)}>needed, typical</text>
+        {(() => {
+          // end-of-line labels, pushed apart so they never overlap
+          const items = [
+            { t: "cooked, ready", y: y(last.available_g) + 4 },
+            { t: "needed, 95th", y: y(last.p95_g) + 4 },
+            { t: "needed, typical", y: y(last.p50_g) + 4 },
+          ].sort((a, b) => a.y - b.y);
+          for (let i = 1; i < items.length; i++) items[i].y = Math.max(items[i].y, items[i - 1].y + 15);
+          return items.map((it) => <text key={it.t} className="lab" x={W - R + 6} y={it.y}>{it.t}</text>);
+        })()}
         {idx !== null ? (
           <g>
             <line x1={x(pts[idx].minute)} x2={x(pts[idx].minute)} y1={T} y2={H - B} stroke={INK} opacity="0.4" />
@@ -299,7 +306,7 @@ export function TrajectoryChart({ steps, scoopG, title }: { steps: HistoryStep[]
           </g>
         ))}
         <path d={band} fill="#e9b949" opacity="0.28" />
-        <path d={med} fill="none" stroke="#2f7d4f" strokeWidth="2" />
+        <path d={med} fill="none" stroke="#1f6b43" strokeWidth="2" />
         {steps.map((s, i) => {
           const c = s.consumed_g;
           const cx = x(i);
@@ -310,7 +317,7 @@ export function TrajectoryChart({ steps, scoopG, title }: { steps: HistoryStep[]
               {c === null ? null : s.classification === "right_censored" ? (
                 <path d={`M${cx},${y(c) - 7} L${cx + 6},${y(c) + 4} L${cx - 6},${y(c) + 4} Z`} fill="#eb6834" stroke="#fcfcfb" strokeWidth="2" />
               ) : (
-                <circle cx={cx} cy={y(c)} r="5" fill={s.used_for_learning ? "#2f7d4f" : "#fcfcfb"} stroke={s.used_for_learning ? "#fcfcfb" : "#898781"} strokeWidth="2" />
+                <circle cx={cx} cy={y(c)} r="5" fill={s.used_for_learning ? "#1f6b43" : "#fcfcfb"} stroke={s.used_for_learning ? "#fcfcfb" : "#898781"} strokeWidth="2" />
               )}
               <text x={cx} y={H - B + 17} textAnchor="middle">{i + 1}</text>
             </g>
@@ -327,7 +334,7 @@ export function TrajectoryChart({ steps, scoopG, title }: { steps: HistoryStep[]
         </Tip>
       ) : null}
       <div className="legend" style={{ marginTop: 6 }}>
-        <span><i style={{ background: "#2f7d4f" }} />Estimated typical amount</span>
+        <span><i style={{ background: "#1f6b43" }} />Estimated typical amount</span>
         <span><i style={{ background: "#e9b949", height: 8, opacity: 0.5 }} />10th–90th percentile</span>
         <span><i style={{ background: INK }} />Suggested first portion</span>
         <span>● eaten, used</span>

@@ -85,7 +85,7 @@ function Logo() {
     <svg viewBox="0 0 64 64" aria-hidden>
       <circle cx="32" cy="32" r="30" fill="#fcfcfb" stroke="#17201a" strokeWidth="3" />
       <circle cx="32" cy="32" r="20" fill="none" stroke="#c3c2b7" strokeWidth="2" />
-      <path d="M32 32 L32 12 A20 20 0 0 1 49.3 42 Z" fill="#2f7d4f" />
+      <path d="M32 32 L32 12 A20 20 0 0 1 49.3 42 Z" fill="#1f6b43" />
     </svg>
   );
 }

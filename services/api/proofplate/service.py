@@ -634,6 +634,9 @@ def evidence(ctx: Ctx, a: S.EvidenceArgs) -> dict:
             cls = defaultdict(int)
             for r in rows:
                 cls[r["classification"]] += 1
+            methods: dict[str, int] = defaultdict(int)
+            for r in ret:
+                methods[r.get("return_measurement") or "unspecified"] += 1
             sids = sorted({r["session_id"] for r in rows})
             dates = sorted(d for d in {sessions.get(s, {}).get("service_date") for s in sids} if d)
             kitchen = defaultdict(int)
@@ -660,6 +663,7 @@ def evidence(ctx: Ctx, a: S.EvidenceArgs) -> dict:
                 "seconds": {"plates_with_seconds": sum(bool(r["seconds_g"]) for r in served), **dict(sec)},
                 "overrides": {"n": len(overrides), "of": len(with_rec)},
                 "classification": dict(cls),
+                "return_methods": dict(methods),
                 "learning": {"eligible": len(elig), "interval": cls.get("interval", 0), "right_censored": cls.get("right_censored", 0),
                              "excluded": len(rows) - len(elig)},
                 "kitchen": {"prepared_g": prepared or None, "surplus_by_destination_g": dict(kitchen),

@@ -36,12 +36,12 @@ export function Plate({ scoops, returnedShare, size = 190, tone = "leaf", label 
   const n = Math.min(full + (half ? 1 : 0), 9);
   const pts = moundCentres(n);
   const rad = n <= 2 ? 24 : n <= 4 ? 21 : n <= 6 ? 18 : 15.5;
-  const fill = tone === "leaf" ? "#2f7d4f" : tone === "ink" ? "#52514e" : "none";
+  const fill = tone === "leaf" ? "#1f6b43" : tone === "ink" ? "#52514e" : "none";
   const stroke = tone === "ghost" ? "#898781" : "none";
   return (
     <svg viewBox="0 0 200 200" width={size} height={size} role="img" aria-label={label} style={{ maxWidth: "100%" }}>
-      <circle cx="100" cy="100" r="96" fill="#ffffff" stroke="#d7d5cb" strokeWidth="2" />
-      <circle cx="100" cy="100" r="72" fill="#f4f2ea" stroke="#e1e0d9" strokeWidth="1.5" />
+      <circle cx="100" cy="100" r="96" fill="#fbfbf9" stroke="#b3b8ae" strokeWidth="2" />
+      <circle cx="100" cy="100" r="72" fill="#e9ece6" stroke="#cfd3cb" strokeWidth="1.5" />
       {pts.map(([x, y], i) => {
         const isHalf = half && i === n - 1;
         if (isHalf) {

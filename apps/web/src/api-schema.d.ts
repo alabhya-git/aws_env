@@ -780,7 +780,7 @@ export interface components {
              * @default weighed
              * @enum {string}
              */
-            measurement?: "weighed" | "scoop_estimate" | "generated";
+            measurement?: "weighed" | "scoop_estimate" | "photo_estimate" | "generated";
         };
         /** Demo_bootstrap */
         Demo_bootstrap: {
@@ -1004,7 +1004,7 @@ export interface components {
              * @default scoop_estimate
              * @enum {string}
              */
-            measurement?: "weighed" | "scoop_estimate" | "generated";
+            measurement?: "weighed" | "scoop_estimate" | "photo_estimate" | "generated";
             /** Satisfaction */
             satisfaction?: ("enough" | "wanted_more" | "unsure") | null;
             /** Leftover Reason */
@@ -1013,6 +1013,8 @@ export interface components {
             seconds_status?: ("not_requested" | "served" | "unavailable" | "delayed" | "declined") | null;
             /** Seconds Wait Min */
             seconds_wait_min?: number | null;
+            /** Photo Sd G */
+            photo_sd_g?: number | null;
             /**
              * Losses G
              * @default 0

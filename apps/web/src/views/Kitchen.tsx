@@ -88,7 +88,7 @@ export function Kitchen() {
             </section>
           ) : null}
 
-          <section className="card stack l">
+          <section className="panel stack l">
             <div className="row between">
               <h2>Preparation plan</h2>
               <div className="row">
@@ -115,10 +115,10 @@ export function Kitchen() {
                     <tbody>
                       {p.batches.map((b: any) => (
                         <tr key={b.index}>
-                          <td className="num">{b.index}</td>
-                          <td className="r">{kg(b.grams)}</td>
-                          <td>{b.start_minute == null ? "before service" : `minute ${b.start_minute}`}</td>
-                          <td>{b.ready_minute === 0 ? "at opening" : `minute ${b.ready_minute}`}</td>
+                          <td className="num nw">{b.index}</td>
+                          <td className="r nw">{kg(b.grams)}</td>
+                          <td className="nw">{b.start_minute == null ? "before service" : `minute ${b.start_minute}`}</td>
+                          <td className="nw">{b.ready_minute === 0 ? "at opening" : `minute ${b.ready_minute}`}</td>
                           <td>{b.trigger === "before_service" ? "Always" : b.trigger === "scheduled" ? "Always" : <span>Only if <strong className="num">{kg(b.threshold_g)}</strong> has been served by minute {b.start_minute}</span>}</td>
                         </tr>
                       ))}
