@@ -7,6 +7,8 @@ import { ErrorNote, Field, Loading, Stepper, useToast } from "../ui";
 
 export function SessionPicker() {
   const ws = useWs();
+  // only foods on this service's menu can be served in it
+  const menu = ws.session ? ws.boot.foods.filter((f) => ws.session.food_ids.includes(f.id)) : ws.boot.foods;
   return (
     <div className="row">
       <Field label="Meal service">
@@ -18,7 +20,7 @@ export function SessionPicker() {
       </Field>
       <Field label="Food">
         <select className="input" value={ws.foodId || ""} onChange={(e) => ws.setFoodId(e.target.value)}>
-          {ws.boot.foods.map((f) => (
+          {menu.map((f) => (
             <option key={f.id} value={f.id}>{f.name} · recipe {f.recipe_version}</option>
           ))}
         </select>
@@ -39,13 +41,21 @@ export function SessionPicker() {
 
 export function NeedsSetup() {
   const ws = useWs();
-  const missing = !ws.boot.foods.length ? "a food" : !ws.calibration ? "a scoop calibration" : !ws.boot.sessions.length ? "a meal service" : null;
+  const missing = !ws.boot.foods.length ? "a food" : !ws.boot.sessions.length ? "a meal service" : !ws.calibration ? "a scoop calibration" : null;
   if (!missing) return null;
+  const onlyCalibration = missing === "a scoop calibration";
   return (
-    <div className="card stack">
-      <h2>This workspace needs {missing} first</h2>
-      <p className="muted">The pilot workspace starts empty on purpose: nothing here is pre-filled or simulated.</p>
-      <div><Link to={`/${ws.mode}/setup`} className="btn primary">Open Setup</Link></div>
+    <div className="stack l">
+      {onlyCalibration ? <SessionPicker /> : null}
+      <div className="card stack">
+        <h2>{onlyCalibration ? "This food's scoop has not been calibrated yet" : `This workspace needs ${missing} first`}</h2>
+        <p className="muted">
+          {onlyCalibration
+            ? "Portions are suggested in scoops, so the scoop has to be weighed for this food first. Pick another food above, or calibrate this one."
+            : "The pilot workspace starts empty on purpose: nothing here is pre-filled or simulated."}
+        </p>
+        <div><Link to={`/${ws.mode}/setup`} className="btn primary">Open Setup</Link></div>
+      </div>
     </div>
   );
 }

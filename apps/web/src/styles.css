@@ -142,7 +142,7 @@ table.t td.r, table.t th.r { text-align: right; font-variant-numeric: tabular-nu
 .duo .card { text-align: center; }
 .steps { counter-reset: step; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
 .steps li { list-style: none; counter-increment: step; }
-.steps li::before { content: counter(step); display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.steps li::before { content: counter(step); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
 ul.plain { margin: 0; padding-left: 18px; text-align: left; }
 ul.plain li { margin: 3px 0; }
 

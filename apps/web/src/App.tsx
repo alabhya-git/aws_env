@@ -144,6 +144,16 @@ function WorkspaceShell({ mode, view, cfg }: { mode: Mode; view: string; cfg: Ru
   }, [reload]);
   useEffect(() => onAuthChange(() => { if (mode === "pilot" && !signedInAs()) go("/signin"); }), [mode, go]);
 
+  // keep the selected food on the selected service's menu, preferring one whose scoop is calibrated
+  useEffect(() => {
+    if (!boot) return;
+    const session = boot.sessions.find((s) => s.id === sessionId);
+    const menu: string[] = session ? session.food_ids : boot.foods.map((f) => f.id);
+    if (foodId && menu.includes(foodId)) return;
+    const calibrated = menu.find((id) => boot.calibrations.some((c) => c.food_id === id));
+    setFoodId(calibrated || menu[0] || null);
+  }, [boot, sessionId, foodId]);
+
   const api = useCallback(<T,>(op: string, args: Record<string, unknown> = {}) => call<T>(mode, op, args), [mode]);
   const ws = useMemo<Workspace | null>(() => {
     if (!boot) return null;
